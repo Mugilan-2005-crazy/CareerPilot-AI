@@ -4,6 +4,7 @@ const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/environment');
 const RefreshToken = require('../models/RefreshToken');
 const crypto = require('crypto');
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
+const { sendMail } = require('../utils/mailer');
 const registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
@@ -130,9 +131,14 @@ const forgotPassword = async (req, res, next) => {
     user.resetPasswordExpires = Date.now() + 1000 * 60 * 60; // 1 hour
     await user.save();
 
-    // TODO: send email with reset link (token)
+    const resetLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+    await sendMail({
+      to: user.email,
+      subject: 'Reset your CareerPilot AI password',
+      html: `<p>Hello ${user.name || 'there'},</p><p>Use the link below to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+    });
 
-    res.json({ success: true, message: 'Reset link generated (send via email in production)' });
+    res.json({ success: true, message: 'Reset link generated and sent if email is configured' });
   } catch (err) {
     next(err);
   }

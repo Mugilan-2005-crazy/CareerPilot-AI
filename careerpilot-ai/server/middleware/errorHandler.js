@@ -7,11 +7,31 @@ const notFound = (req, res, next) => {
 const errorHandler = (err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
 
-  res.status(statusCode).json({
+  const response = {
     success: false,
     message: err.message || 'Internal Server Error',
-    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
-  });
+  };
+
+  if (process.env.NODE_ENV !== 'production') {
+    response.stack = err.stack;
+  }
+
+  if (err.name === 'CastError') {
+    response.message = 'Invalid ID format';
+    return res.status(400).json(response);
+  }
+
+  if (err.code === 11000) {
+    response.message = 'Duplicate field value entered';
+    return res.status(409).json(response);
+  }
+
+  if (err.name === 'ValidationError') {
+    response.message = 'Validation error';
+    return res.status(400).json(response);
+  }
+
+  res.status(statusCode).json(response);
 };
 
 module.exports = {

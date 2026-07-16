@@ -16,21 +16,27 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       match: [/^.+@.+\..+$/, 'Please enter a valid email'],
+      index: true,
     },
     password: {
       type: String,
       required: [true, 'Password is required'],
       minlength: [6, 'Password must be at least 6 characters'],
+      select: false,
     },
     role: {
       type: String,
       enum: ['student', 'admin', 'mentor'],
       default: 'student',
+      index: true,
     },
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
+    phone: { type: String, trim: true },
+    profile: { type: mongoose.Schema.Types.ObjectId, ref: 'StudentProfile' },
     resetPasswordToken: {
       type: String,
       select: false,

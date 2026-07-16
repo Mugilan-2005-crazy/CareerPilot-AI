@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 
 const aptitudeQuestionSchema = new mongoose.Schema(
   {
-    question: { type: String, required: true },
-    choices: [{ type: String }],
-    answer: { type: String },
+    question: { type: String, required: true, trim: true },
+    choices: [{ type: String, trim: true }],
+    answer: { type: String, trim: true },
     difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium', index: true },
-    tags: [{ type: String, index: true }],
+    tags: [{ type: String, trim: true, lowercase: true, index: true }],
+    topic: { type: String, trim: true, index: true },
+    isActive: { type: Boolean, default: true, index: true },
   },
   { timestamps: true },
 );
