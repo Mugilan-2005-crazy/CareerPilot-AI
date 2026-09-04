@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const refreshTokenSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    token: { type: String, required: true },
+    token: { type: String },
+    tokenHash: { type: String, index: true },
     expires: { type: Date, required: true },
     revoked: { type: Date },
-    replacedByToken: { type: String },
+    replacedByTokenHash: { type: String },
   },
   { timestamps: true },
 );

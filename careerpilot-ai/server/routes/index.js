@@ -1,6 +1,7 @@
 const express = require('express');
 const authRoutes = require('./authRoutes');
 const aiRoutes = require('./aiRoutes');
+const v1Routes = require('./v1');
 const companyRoutes = require('./companyRoutes');
 const companyAptitudeTrainingRoutes = require('./companyAptitudeTrainingRoutes');
 const createResourceRoutes = require('./resourceRoutes');
@@ -25,6 +26,26 @@ const createResourceController = require('../controllers/resourceController');
 
 const router = express.Router();
 
+/**
+ * API VERSIONING STRATEGY
+ * 
+ * Canonical endpoints: /api/v1/* (with security hardening)
+ * - /api/v1/auth/* - Authentication endpoints
+ * - /api/v1/ai/* - AI endpoints (AUTHENTICATED with JWT)
+ * 
+ * Legacy compatibility: /api/* (maintained for backward compatibility)
+ * - /api/auth/* - Legacy auth endpoints
+ * - /api/ai/* - Legacy AI endpoints (auth enforced via authMiddleware, same
+ *               security boundary as /api/v1/ai/*)
+ * - Other resources continue at /api/*
+ * 
+ * Migration: Clients should transition to /api/v1/ai/* with Bearer tokens
+ */
+
+// API v1 - Versioned endpoints with security hardening
+router.use('/v1', v1Routes);
+
+// Legacy endpoints (backward compatibility - will be deprecated in Phase 12)
 router.use('/auth', authRoutes);
 router.use('/ai', aiRoutes);
 router.use('/companies', companyRoutes);

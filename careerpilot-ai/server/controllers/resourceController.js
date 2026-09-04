@@ -1,5 +1,17 @@
 const { createCrudService } = require('../services/baseService');
 
+const protectedFields = new Set(['role', 'isAdmin', 'permissions', 'verified', 'userId', 'ownerId', 'createdBy', 'accountId']);
+
+const sanitizeWritePayload = (req, payload, ownerField) => {
+  const blockedFields = Object.keys(payload).filter((field) => protectedFields.has(field) || field === ownerField);
+  if (blockedFields.length) {
+    const error = new Error(`Protected fields cannot be modified: ${blockedFields.join(', ')}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return payload;
+};
+
 const createResourceController = (Model, options = {}) => {
   const service = createCrudService(Model, options);
   const ownerField = options.ownerField || 'user';
@@ -63,7 +75,7 @@ const createResourceController = (Model, options = {}) => {
 
     create: async (req, res, next) => {
       try {
-        const payload = { ...req.body };
+        const payload = sanitizeWritePayload(req, { ...req.body }, ownerField);
         if (req.user?.role === 'student' && ownerField && payload[ownerField] === undefined) {
           payload[ownerField] = req.user._id;
         }
@@ -85,7 +97,8 @@ const createResourceController = (Model, options = {}) => {
           return res.status(403).json({ success: false, message: 'Forbidden' });
         }
 
-        const item = await service.update({ id: req.params.id, payload: req.body });
+        const payload = sanitizeWritePayload(req, { ...req.body }, ownerField);
+        const item = await service.update({ id: req.params.id, payload });
         res.json({ success: true, data: item });
       } catch (error) {
         next(error);

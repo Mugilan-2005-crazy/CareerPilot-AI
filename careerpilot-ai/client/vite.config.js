@@ -5,5 +5,14 @@ export default defineConfig({
     server: {
         port: 3000,
         host: '0.0.0.0',
+        // Development proxy: forward /api to the backend during local/E2E runs.
+        // In production the nginx container handles this proxying.
+        proxy: {
+            '/api': {
+                target: 'http://127.0.0.1:5000',
+                changeOrigin: true,
+                secure: false,
+            },
+        },
     },
 });

@@ -1,4 +1,4 @@
-const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {} }) => {
+const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {}, ownerField } = {}) => {
   const filter = {};
   const search = query.search || '';
 
@@ -13,8 +13,14 @@ const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {} }
   });
 
   if (query.role) filter.role = query.role;
-  if (user && user.role === 'student') {
-    filter.user = user._id;
+
+  // Student data isolation: only scope to the authenticated user when the
+  // model/service is ownership-scoped (i.e. declares an ownerField). Shared
+  // content models (e.g. CompanyAptitudeTraining) intentionally have no
+  // ownerField and must remain visible to students. Never hardcode a literal
+  // "user" field here, or shared models silently return empty result sets.
+  if (user && user.role === 'student' && ownerField) {
+    filter[ownerField] = user._id;
   }
 
   return filter;
@@ -26,7 +32,7 @@ const createCrudService = (Model, options = {}) => ({
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
     const skip = (page - 1) * limit;
     const sort = query.sort || '-createdAt';
-    const filter = buildQuery({ Model, searchFields: options.searchFields || [], filters, user, query });
+    const filter = buildQuery({ Model, searchFields: options.searchFields || [], filters, user, query, ownerField: options.ownerField });
 
     const items = await Model.find(filter)
       .sort(sort)

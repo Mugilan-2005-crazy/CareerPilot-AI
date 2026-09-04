@@ -6,6 +6,7 @@ const routes = require('./routes');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { limiter, sanitizeMongo, xssProtection } = require('./middleware/security');
 const { requestLogger } = require('./utils/logger');
+const requestIdMiddleware = require('./middleware/requestId');
 const { CLIENT_URL } = require('./config/environment');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(
     credentials: true,
   }),
 );
+app.use(requestIdMiddleware);
 app.use(morgan('dev'));
 app.use(requestLogger);
 app.use(limiter);

@@ -5,11 +5,14 @@ const notFound = (req, res, next) => {
 };
 
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  const statusCode = err.statusCode || (res.statusCode === 200 ? 500 : res.statusCode);
 
   const response = {
     success: false,
-    message: err.message || 'Internal Server Error',
+    message: process.env.NODE_ENV === 'production' && statusCode >= 500
+      ? 'Internal Server Error'
+      : (err.message || 'Internal Server Error'),
+    requestId: req.requestId,
   };
 
   if (process.env.NODE_ENV !== 'production') {
