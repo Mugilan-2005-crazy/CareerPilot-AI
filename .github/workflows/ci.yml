@@ -42,7 +42,23 @@ jobs:
       - name: Unit / security / integration tests (real MongoDB)
         run: npm test -- --detectOpenHandles
       - name: Audit (fail on HIGH/CRITICAL)
-        run: npm audit --audit-level=high
+        run: |
+          # Fail closed: a real HIGH/CRITICAL finding is deterministic and fails
+          # immediately. We only retry when the npm advisory SERVICE itself is
+          # transiently unavailable (503 / network timeout).
+          for i in 1 2 3; do
+            out=$(npm audit --audit-level=high 2>&1)
+            code=$?
+            if [ $code -eq 0 ]; then exit 0; fi
+            if ! echo "$out" | grep -qE 'Service Unavailable|returned an error|network timeout|ECONNREFUSED'; then
+              echo "$out"
+              exit $code
+            fi
+            echo "npm audit advisory-service error (attempt $i); retrying after registry outage"
+            sleep 10
+          done
+          echo "npm audit advisory service persistently unavailable"
+          exit 1
 
   client:
     name: Client typecheck + build + audit
@@ -64,7 +80,22 @@ jobs:
       - name: Build
         run: npm run build
       - name: Audit (fail on HIGH/CRITICAL)
-        run: npm audit --audit-level=high
+        run: |
+          # Fail closed: a real HIGH/CRITICAL finding fails immediately; only
+          # transient npm advisory-service outages (503/timeout) are retried.
+          for i in 1 2 3; do
+            out=$(npm audit --audit-level=high 2>&1)
+            code=$?
+            if [ $code -eq 0 ]; then exit 0; fi
+            if ! echo "$out" | grep -qE 'Service Unavailable|returned an error|network timeout|ECONNREFUSED'; then
+              echo "$out"
+              exit $code
+            fi
+            echo "npm audit advisory-service error (attempt $i); retrying after registry outage"
+            sleep 10
+          done
+          echo "npm audit advisory service persistently unavailable"
+          exit 1
 
   python:
     name: Python AI tests
