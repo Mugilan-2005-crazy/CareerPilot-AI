@@ -9,6 +9,7 @@ const {
   predictPlacement,
   recommendCompanies,
   generateInterviewQuestions,
+  aiChat,
   health,
 } = require('../controllers/ai/aiController');
 
@@ -23,6 +24,7 @@ router.post('/skill-gap', validateRequest(aiSchemas['skill-gap']), analyzeSkillG
 router.post('/placement-prediction', validateRequest(aiSchemas['placement-prediction']), predictPlacement);
 router.post('/company-recommendation', validateRequest(aiSchemas['company-recommendation']), recommendCompanies);
 router.post('/interview-questions', validateRequest(aiSchemas['interview-questions']), generateInterviewQuestions);
+router.post('/ai-chat', validateRequest(aiSchemas['ai-chat']), aiChat);
 router.get('/health', health);
 
 module.exports = router;

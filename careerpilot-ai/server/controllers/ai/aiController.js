@@ -60,6 +60,7 @@ const analyzeSkillGap = (req, res, next) => _handleTask(req, res, next, 'skill-g
 const predictPlacement = (req, res, next) => _handleTask(req, res, next, 'placement-prediction');
 const recommendCompanies = (req, res, next) => _handleTask(req, res, next, 'company-recommendation');
 const generateInterviewQuestions = (req, res, next) => _handleTask(req, res, next, 'interview-questions');
+const aiChat = (req, res, next) => _handleTask(req, res, next, 'ai-chat');
 
 const health = async (req, res, next) => {
   try {
@@ -77,5 +78,6 @@ module.exports = {
   predictPlacement,
   recommendCompanies,
   generateInterviewQuestions,
+  aiChat,
   health,
 };

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 RESUME_TEXT_MAX = 50_000  # matches the Node gatekeeper limit
 
@@ -41,3 +41,23 @@ class InterviewQuestionRequest(BaseModel):
     role: str = Field(..., min_length=1, max_length=200)
     experience_level: str = Field("mid", max_length=50)
     difficulty: str = Field("medium", max_length=50)
+
+
+class ChatRequest(BaseModel):
+    model_config = STRICT
+    message: str = Field(..., min_length=1, max_length=2000)
+    context: Dict[str, Any] = Field(default_factory=dict)
+
+
+class JDAnalysisRequest(BaseModel):
+    model_config = STRICT
+    job_description: str = Field(..., min_length=20, max_length=RESUME_TEXT_MAX)
+    user_skills: List[str] = Field(..., max_length=100, min_length=1)
+
+
+class CareerTransitionRequest(BaseModel):
+    model_config = STRICT
+    current_career: str = Field(..., min_length=1, max_length=200)
+    target_career: str = Field(..., min_length=1, max_length=200)
+    current_skills: List[str] = Field(..., max_length=100, min_length=1)
+    experience_years: int = Field(0, ge=0, le=60)

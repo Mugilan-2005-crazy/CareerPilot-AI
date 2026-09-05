@@ -13,6 +13,13 @@ async function request(task, payload, requestId) {
     'placement-prediction': '/api/ai/placement-prediction',
     'company-recommendation': '/api/ai/company-recommendation',
     'interview-questions': '/api/ai/interview-questions',
+    'career-matching': '/api/ai/career-matching',
+    'skill-gap-enhanced': '/api/ai/skill-gap-enhanced',
+    'roadmap': '/api/ai/roadmap',
+    'project-recommendations': '/api/ai/project-recommendations',
+    'jd-analysis': '/api/ai/jd-analysis',
+    'career-transition': '/api/ai/career-transition',
+    'ai-chat': '/api/ai/chat',
   };
 
   const path = endpointMap[task];

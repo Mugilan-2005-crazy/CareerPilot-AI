@@ -7,10 +7,14 @@ client/node_modules/
 
 # Python
 ai/.venv/
+ai/__pycache__/
+ai/**/__pycache__/
+*.pyc
 
-# Env
-.env
-.env.*
+# Client build
+client/dist/
+client/node_modules/
+*.tsbuildinfo
 
 # Playwright
 client/test-results/

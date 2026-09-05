@@ -3,11 +3,12 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from app.routers import analysis
+from app.routers import skill_graph
 
 app = FastAPI(
     title="CareerPilot AI Service",
-    description="AI microservice for resume analysis, skill gaps, placement prediction, company recommendations, and interview questions",
-    version="1.0.0",
+    description="AI microservice for resume analysis, skill gaps, placement prediction, company recommendations, interview questions, and career intelligence",
+    version="1.1.0",
 )
 
 # Reject oversized request bodies before any body parsing work happens.
@@ -32,6 +33,7 @@ async def reject_oversized_bodies(request: Request, call_next):
 # abuse of the AI endpoints. Keep this internal.
 
 app.include_router(analysis.router, prefix="/api/ai", tags=["AI"])
+app.include_router(skill_graph.router, prefix="/api/skill-graph", tags=["SkillGraph"])
 
 
 @app.get("/health")
