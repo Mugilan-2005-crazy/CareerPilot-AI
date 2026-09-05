@@ -23,7 +23,7 @@ export default function ResumeAnalyzerPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai/resume-analysis', {
+      const resp = await apiClient.post('/api/v1/ai/resume-analysis', {
         resume_text: resumeText,
         target_role: targetRole || undefined,
       });

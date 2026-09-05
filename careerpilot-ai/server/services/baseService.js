@@ -1,4 +1,4 @@
-const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {}, ownerField } = {}) => {
+const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {}, ownerField, ownedByCurrentUser } = {}) => {
   const filter = {};
   const search = query.search || '';
 
@@ -19,7 +19,7 @@ const buildQuery = ({ Model, searchFields = [], filters = {}, user, query = {}, 
   // content models (e.g. CompanyAptitudeTraining) intentionally have no
   // ownerField and must remain visible to students. Never hardcode a literal
   // "user" field here, or shared models silently return empty result sets.
-  if (user && user.role === 'student' && ownerField) {
+  if (user && user.role === 'student' && ownerField && ownedByCurrentUser !== false) {
     filter[ownerField] = user._id;
   }
 
@@ -32,7 +32,7 @@ const createCrudService = (Model, options = {}) => ({
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
     const skip = (page - 1) * limit;
     const sort = query.sort || '-createdAt';
-    const filter = buildQuery({ Model, searchFields: options.searchFields || [], filters, user, query, ownerField: options.ownerField });
+    const filter = buildQuery({ Model, searchFields: options.searchFields || [], filters, user, query, ownerField: options.ownerField, ownedByCurrentUser: options.ownedByCurrentUser });
 
     const items = await Model.find(filter)
       .sort(sort)

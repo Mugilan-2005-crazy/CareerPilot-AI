@@ -35,7 +35,7 @@ export default function RoadmapPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai-career/roadmap', {
+      const resp = await apiClient.post('/api/v1/ai-career/roadmap', {
         target_career: career,
         current_skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
         available_hours_per_week: hours,

@@ -23,7 +23,7 @@ export default function InterviewCoachPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai/interview-questions', {
+      const resp = await apiClient.post('/api/v1/ai/interview-questions', {
         role,
         experience_level: level,
         difficulty,

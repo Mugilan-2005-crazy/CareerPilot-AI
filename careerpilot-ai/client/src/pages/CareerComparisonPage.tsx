@@ -26,7 +26,7 @@ export default function CareerComparisonPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai-career/career-matching', {
+      const resp = await apiClient.post('/api/v1/ai-career/career-matching', {
         skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
         interests: interests.split(',').map((s) => s.trim()).filter(Boolean),
         experience_years: experience,

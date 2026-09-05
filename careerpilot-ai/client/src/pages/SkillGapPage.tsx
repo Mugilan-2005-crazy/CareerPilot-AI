@@ -27,7 +27,7 @@ export default function SkillGapPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai-career/skill-gap-enhanced', {
+      const resp = await apiClient.post('/api/v1/ai-career/skill-gap-enhanced', {
         current_skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
         target_career: career,
         experience_years: experience,

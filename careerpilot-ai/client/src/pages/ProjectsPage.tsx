@@ -30,7 +30,7 @@ export default function ProjectsPage() {
     setError(null);
     setResult(null);
     try {
-      const resp = await apiClient.post('/api/ai-career/project-recommendations', {
+      const resp = await apiClient.post('/api/v1/ai-career/project-recommendations', {
         target_career: career,
         current_skills: skills.split(',').map((s) => s.trim()).filter(Boolean),
         difficulty,

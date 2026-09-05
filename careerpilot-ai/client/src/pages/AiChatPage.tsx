@@ -16,6 +16,7 @@ export default function AiChatPage() {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,9 +29,10 @@ export default function AiChatPage() {
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
+    setError(null);
     setLoading(true);
     try {
-      const resp = await apiClient.post('/api/ai/ai-chat', { message: text, context: {} });
+      const resp = await apiClient.post('/api/v1/ai/ai-chat', { message: text, context: {} });
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -40,6 +42,7 @@ export default function AiChatPage() {
       setMessages((prev) => [...prev, assistantMsg]);
     } catch {
       setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: 'assistant', text: 'Sorry, I encountered an error. Please try again.' }]);
+      setError('Unable to get a response right now.');
     } finally {
       setLoading(false);
     }
@@ -73,6 +76,8 @@ export default function AiChatPage() {
             </div>
           </div>
         </header>
+
+        {error && <div className="mb-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>}
 
         <div className="flex-1 space-y-4 overflow-y-auto rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-soft">
           <AnimatePresence>

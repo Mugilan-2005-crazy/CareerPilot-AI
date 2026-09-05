@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
-import { BrainCircuit, Briefcase, Code2, FileCheck, FileText, MessageSquareText, MoonStar, Sun } from 'lucide-react';
+import { BrainCircuit, Briefcase, Code2, FileCheck, FileText, MessageSquareText, MoonStar, Sun, LogOut, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import apiClient from '../services/apiClient';
+import { useAuth } from '../context/AuthContext';
 
 interface Stats {
   resumeCount: number;
@@ -9,7 +10,6 @@ interface Stats {
   analysisCount: number;
   progressCount: number;
   lastAtsScore: string | null;
-  firstName: string | null;
 }
 
 const emptyStats: Stats = {
@@ -18,7 +18,6 @@ const emptyStats: Stats = {
   analysisCount: 0,
   progressCount: 0,
   lastAtsScore: null,
-  firstName: null,
 };
 
 async function loadStats(setStats: (s: Stats) => void, setError: (m: string | null) => void) {
@@ -40,7 +39,6 @@ async function loadStats(setStats: (s: Stats) => void, setError: (m: string | nu
       analysisCount: analysesList.length,
       progressCount: (progress && progress.data) ? progress.data.length : 0,
       lastAtsScore: lastAnalysis && lastAnalysis.atsScore != null ? `${lastAnalysis.atsScore}%` : null,
-      firstName: null,
     });
     setError(null);
   } catch {
@@ -53,10 +51,15 @@ export default function DashboardPage() {
   const [dark, setDark] = useState(true);
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [error, setError] = useState<string | null>(null);
+  const { user, logout, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    loadStats(setStats, setError);
-  }, []);
+    if (!authLoading) {
+      loadStats(setStats, setError);
+    }
+  }, [authLoading]);
+
+  const firstName = user?.name?.split(' ')[0] || null;
 
   const overviewCards = [
     { title: 'Resumes', value: String(stats.resumeCount), subtitle: stats.lastAtsScore ? `Latest ATS score ${stats.lastAtsScore}` : 'Upload a resume to start' },
@@ -76,14 +79,27 @@ export default function DashboardPage() {
         <header className="mb-8 flex items-center justify-between rounded-3xl border border-slate-800 bg-slate-900/70 px-5 py-4 shadow-soft backdrop-blur">
           <div>
             <p className="text-sm text-slate-400">Student Dashboard</p>
-            <h1 className="text-2xl font-semibold text-white">Welcome back{stats.firstName ? `, ${stats.firstName}` : ''}</h1>
+            <h1 className="text-2xl font-semibold text-white">Welcome back{firstName ? `, ${firstName}` : ''}</h1>
           </div>
-          <button
-            onClick={() => setDark((value) => !value)}
-            className={`rounded-full border p-2 transition ${dark ? 'border-slate-700 bg-slate-800 text-slate-100' : 'border-slate-200 bg-white text-slate-700'}`}
-          >
-            {dark ? <Sun className="h-5 w-5" /> : <MoonStar className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-slate-200">
+              <UserRound className="h-4 w-4" />
+              <span className="hidden sm:inline">{user?.email}</span>
+            </div>
+            <button
+              onClick={() => setDark((value) => !value)}
+              className={`rounded-full border p-2 transition ${dark ? 'border-slate-700 bg-slate-800 text-slate-100' : 'border-slate-200 bg-white text-slate-700'}`}
+            >
+              {dark ? <Sun className="h-5 w-5" /> : <MoonStar className="h-5 w-5" />}
+            </button>
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-sm text-rose-200 transition hover:bg-rose-500/20"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
         </header>
 
         {error && <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>}
@@ -97,7 +113,7 @@ export default function DashboardPage() {
             </motion.div>
           ))}
         </div>
-<div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
           <div className={`rounded-3xl border p-6 shadow-soft ${dark ? 'border-slate-800 bg-slate-900/70' : 'border-slate-200 bg-white'}`}>
             <div className="mb-4 flex items-center justify-between">
               <div>

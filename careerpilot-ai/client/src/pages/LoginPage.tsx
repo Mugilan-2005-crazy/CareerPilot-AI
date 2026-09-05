@@ -7,17 +7,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      // minimal feedback for now
-      // eslint-disable-next-line no-alert
-      alert('Login failed');
+    } catch {
+      setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -34,23 +35,25 @@ export default function LoginPage() {
           <h1 className="mt-2 text-3xl font-semibold text-white">Login to CareerPilot AI</h1>
         </div>
 
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}>
+        {error && <div className="mb-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>}
+
+        <form className="space-y-4" onSubmit={handleSignIn}>
           <label className="block">
             <span className="mb-2 block text-sm text-slate-400">Email</span>
             <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
               <Mail className="h-4 w-4 text-slate-500" />
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@example.com" className="w-full bg-transparent outline-none" />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="you@example.com" className="w-full bg-transparent outline-none" required />
             </div>
           </label>
           <label className="block">
             <span className="mb-2 block text-sm text-slate-400">Password</span>
             <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 px-4 py-3">
               <Lock className="h-4 w-4 text-slate-500" />
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" className="w-full bg-transparent outline-none" />
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="••••••••" className="w-full bg-transparent outline-none" required />
             </div>
           </label>
 
-          <button disabled={loading} type="submit" className="w-full rounded-2xl bg-brand-600 px-4 py-3 font-medium text-white transition hover:bg-brand-700">
+          <button disabled={loading} type="submit" className="w-full rounded-2xl bg-brand-600 px-4 py-3 font-medium text-white transition hover:bg-brand-700 disabled:opacity-50">
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>

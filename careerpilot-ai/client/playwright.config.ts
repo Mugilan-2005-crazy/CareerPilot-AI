@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const serverDir = resolve(__dirname, '../server');
+const aiDir = resolve(__dirname, '../ai');
 
 const E2E_DB = 'mongodb://127.0.0.1:27017/careerpilot_e2e';
 
@@ -14,7 +15,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
-  timeout: 30000,
+  timeout: 60000,
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -42,6 +43,13 @@ export default defineConfig({
         OLLAMA_URL: 'http://127.0.0.1:11434',
         OLLAMA_TIMEOUT_MS: '20000',
       },
+    },
+    {
+      command: 'python -m uvicorn main:app --host 127.0.0.1 --port 8000',
+      cwd: aiDir,
+      port: 8000,
+      timeout: 30000,
+      reuseExistingServer: !process.env.CI,
     },
     {
       command: 'npm run dev',

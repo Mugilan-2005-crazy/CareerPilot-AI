@@ -5,6 +5,7 @@ const aiCareerRoutes = require('../aiCareerRoutes');
 const skillGraphRoutes = require('../skillGraphRoutes');
 const jdIntelligenceRoutes = require('../jdIntelligenceRoutes');
 const careerTransitionRoutes = require('../careerTransitionRoutes');
+const userRoutes = require('./userRoutes');
 
 const router = express.Router();
 
@@ -18,6 +19,9 @@ const router = express.Router();
  * - /api/v1/ai/* - AI endpoints (authenticated)
  * - /api/v1/ai-career/* - Career intelligence endpoints (authenticated)
  * - /api/v1/skill-graph/* - Skill graph endpoints (authenticated)
+ * - /api/v1/jd-intelligence/* - JD intelligence endpoints (authenticated)
+ * - /api/v1/career-transition/* - Career transition endpoints (authenticated)
+ * - /api/v1/users/* - User management endpoints (authenticated)
  */
 
 router.use('/auth', authRoutes);
@@ -26,5 +30,6 @@ router.use('/ai-career', aiCareerRoutes);
 router.use('/skill-graph', skillGraphRoutes);
 router.use('/jd-intelligence', jdIntelligenceRoutes);
 router.use('/career-transition', careerTransitionRoutes);
+router.use('/users', userRoutes);
 
 module.exports = router;

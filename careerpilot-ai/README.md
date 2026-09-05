@@ -1,84 +1,132 @@
 # CareerPilot AI
 
-Professional project scaffold for the CareerPilot AI platform.
+AI-Native Multi-Domain Career Decision Intelligence Operating System.
 
 ## Structure Overview
 
-- client/: React + Tailwind CSS frontend
-- server/: Node.js + Express.js backend
-- ai/: Python + FastAPI AI services
-- database/: MongoDB schemas, scripts, and seed-related assets
-- docs/: Architecture, planning, and product documentation
+- `client/`: React + Vite + Tailwind CSS frontend
+- `server/`: Node.js + Express.js backend
+- `ai/`: Python + FastAPI AI microservice
+- `database/`: MongoDB schemas, scripts, and seed-related assets
+- `docs/`: Architecture, planning, and product documentation
 
-## Current Implementation (Phase 1)
+## Implemented Features
 
-This repository contains an initial production-focused implementation of CareerPilot AI features appropriate for local development and continued incremental work. The following components are implemented and verified in Phase 1:
+### Authentication & Security
+- JWT access tokens with refresh token rotation
+- Password reset with hashed tokens (single-use, expiry)
+- Rate limiting (global + auth + AI endpoints)
+- Input validation (Zod on Node, Pydantic on Python)
+- Output sanitization (internal provider keys stripped)
+- Request ID correlation across services
+- MongoDB injection protection (mongo-sanitize)
+- XSS protection (xss-clean)
+- Helmet security headers
+- CORS restricted to configured client origin
+- IDOR / ownership isolation on all student resources
+- Mass-assignment protection on create/update
 
-- Frontend: React + Vite + Tailwind application (client/)
-- Backend: Express.js API with Mongoose models, JWT access tokens and refresh token rotation, auth flows, and resource CRUD endpoints (server/)
-- AI microservice: Deterministic FastAPI service providing resume analysis and related endpoints (ai/)
-- AI provider abstraction: Server-side orchestrator with a deterministic provider and an Ollama adapter (server/services/ai)
+### Career Intelligence Engines
+- **Skill Graph Engine**: prerequisites, dependents, related skills, learning order, coverage, suggestions, graph subset
+- **Career Matching Engine**: multi-career compatibility scoring with confidence levels
+- **Skill Gap Analysis**: priority classification, proficiency-adjusted effort estimation, prerequisite-aware gaps
+- **Adaptive Roadmap Engine**: milestone-based learning paths with duration and hour-based planning
+- **Project Intelligence Engine**: multi-factor project scoring (portfolio impact, industry relevance, differentiation)
+- **Resume Intelligence**: ATS scoring, keyword detection, actionable recommendations
+- **JD Intelligence**: job description keyword extraction, required/preferred classification, skill matching
+- **Career Transition Engine**: transferable skill identification, feasibility scoring, recommended steps
 
-This README documents implemented behavior, local startup, environment variables, and Phase 1 limitations. Do not assume unimplemented cloud LLM providers are available.
+### AI Architecture
+- AI orchestrator with timeout protection (35s global)
+- Deterministic provider (Python FastAPI microservice)
+- Optional Ollama provider adapter with automatic fallback
+- Strict request/response schemas on all endpoints
+- Oversized request body rejection (64KB limit)
+- Safe error messages (no stack traces or internals leaked in production)
 
-## Quickstart — Local development (Phase 1)
+### Frontend
+- Protected routes with client-side guard
+- Token refresh interceptor with race-safety
+- Career Command Center dashboard
+- Career Explorer, Skill Gap, Roadmap, Projects, Resume Analyzer, Interview Coach, AI Chat
+- Dark mode toggle
+- Responsive design with Tailwind CSS
+
+### Testing
+- **Backend**: 15 Jest test suites, 86 tests (auth, security, AI evaluation, career intelligence, skill graph, integration)
+- **Python AI**: 4 pytest suites, 43 tests (API, career intelligence, skill graph, AI evaluation)
+- **E2E**: 12 Playwright tests (auth flows, session persistence, AI protection, complete career journey)
+- **Security**: IDOR, mass assignment, token rotation, refresh race, prompt injection tests
+
+## Quickstart — Local development
 
 Prerequisites:
-
-- Node.js (16+)
-- Python 3.10+ (for AI microservice) — optional if you use deterministic features only
+- Node.js (20+)
+- Python 3.12+ (for AI microservice)
 - MongoDB (local or remote)
 
-Basic startup order (recommended):
+Basic startup order:
 
-1. Start MongoDB (e.g., `mongod` or a local Docker container).
-2. (Optional) Start Ollama if you intend to use local LLMs. See `docs/phase1_documentation.md` for details.
-3. Start the AI microservice (FastAPI):
-
-```bash
-cd ai
-python -m venv .venv
-.venv\Scripts\activate   # Windows
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
-
-4. Start the backend API:
-
-```bash
-cd server
-npm install
-npm run dev
-```
-
-5. Start the frontend:
-
-```bash
-cd client
-npm install
-npm run dev
-```
+1. Start MongoDB
+2. Start the AI microservice:
+   ```bash
+   cd ai
+   python -m venv .venv
+   .venv\Scripts\activate   # Windows
+   pip install -r requirements.txt -r requirements-dev.txt
+   uvicorn main:app --reload --port 8000
+   ```
+3. Start the backend API:
+   ```bash
+   cd server
+   npm install
+   npm run dev
+   ```
+4. Start the frontend:
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
 
 ### Testing
 
-Run backend tests:
-
 ```bash
-cd server
-npm test
+# Backend tests
+cd server && npm test
+
+# Python AI tests
+cd ai && python -m pytest tests/ -v
+
+# Frontend build
+cd client && npm run build
+
+# E2E tests
+cd client && npx playwright test --config=playwright.config.ts
 ```
 
-Run frontend build:
+### Security scanning
 
 ```bash
-cd client
-npm run build
+cd server && npm audit --omit=dev --audit-level=high
+cd client && npm audit --omit=dev --audit-level=high
+node scripts/scan-secrets.js
 ```
 
-## Phase 1 Notes and Limitations
+## Environment Variables
 
-- Ollama is added as an optional provider adapter on the server but is not required. If `AI_PROVIDER` is set to `ollama` or `auto` and Ollama is not available, the system falls back to the deterministic AI microservice.
-- Cloud providers (Gemini / Claude / OpenAI) are not implemented in Phase 1. Adapters may be added later.
-- Do NOT commit real secrets. `.env.example` lists required environment variables.
+See `.env.example` for required variables. Key variables:
 
-See `docs/phase1_documentation.md` for detailed Phase 1 architecture, configuration, and security notes.
+- `MONGO_URI`: MongoDB connection string
+- `JWT_SECRET`: Strong secret for JWT signing (required in production)
+- `AI_PROVIDER`: `deterministic` | `ollama` | `auto`
+- `AI_SERVICE_URL`: Python AI microservice URL
+- `OLLAMA_URL`: Ollama server URL (optional)
+- `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`: Email configuration (optional)
+
+## API Versioning
+
+- Canonical endpoints: `/api/v1/*` (security-hardened)
+- Legacy compatibility: `/api/*` (maintained for backward compatibility)
+
+Clients should transition to `/api/v1/*` with Bearer tokens.
