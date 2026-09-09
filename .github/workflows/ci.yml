@@ -155,6 +155,9 @@ jobs:
         working-directory: careerpilot-ai/server
       - name: Install client deps + Playwright
         run: npm ci && npx playwright install chromium --with-deps
+      - name: Install AI dependencies
+        run: pip install -r requirements.txt
+        working-directory: careerpilot-ai/ai
       - name: Run E2E tests
         run: npx playwright test --reporter=list
 
