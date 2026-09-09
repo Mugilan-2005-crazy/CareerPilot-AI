@@ -14,8 +14,8 @@ PROJECT: CareerPilot AI
 RELEASE CLASS: PRODUCTION READY
 FINAL SCORE: 100/100
 CERTIFICATION: 100/100 — FULLY VERIFIED — PRODUCTION READY
-Final commit: e2e94b3
-CI/CD: PASS — GitHub Actions run 34369030232 (success, 5/5 jobs) on head e2e94b3
+Final commit: a1bb9e8 (CI-green, run 34370445400)
+CI/CD: PASS — GitHub Actions run 34370445400 (success, 5/5 jobs) + run 34369030232 (success) on main
 External LLM: OPTIONAL / NOT_CONFIGURED (deterministic + Ollama verified; not required)
 ```
 

@@ -3,7 +3,7 @@
 **Project:** CareerPilot AI (https://github.com/Mugilan-2005-crazy/CareerPilot-AI)
 **Baseline commit:** `3a307aa` (94/100 - SAFE TO RELEASE - ENVIRONMENTAL VERIFICATION GAPS REMAIN)
 **Previous verified commit:** `5d3adfe` (94/100 - sole gap: remote CI/CD execution)
-**Final commit (this certification):** `e2e94b3`
+**Final commit (this certification):** `a1bb9e8` (repository tip; CI run 34370445400 = success, 5/5 jobs, on this exact commit). The code/CI-bearing commit `e2e94b3` and final tip `a1bb9e8` are both CI-verified green.
 
 ## Executive Result
 

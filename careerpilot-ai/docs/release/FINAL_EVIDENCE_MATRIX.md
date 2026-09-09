@@ -16,7 +16,7 @@
 | Ollama | PASS | `OLLAMA_MODEL=llama3.1:latest` provider `.request()` | success:true, structured JSON, 22,914 ms | 3a307aa | Ollama 0.33.3 live | none |
 | Docker | PASS | compose config / build / up / restart / down / up; container E2E | all healthy | 3a307aa | Docker 29.6.2 live daemon | none |
 | Database | PASS | `integration.db.test.js` | PASS (dedicated DB, isolation) | 3a307aa | real mongo:7 | none |
-| **CI/CD** | **PASS** | **GitHub Actions workflow `CI` (root)** | **run 34369030232 -> success, 5/5 jobs** | **e2e94b3** | GitHub | none |
+| **CI/CD** | **PASS** | **GitHub Actions workflow `CI` (root)** | **run 34370445400 (dispatch) -> success, 5/5 jobs; run 34369030232 (push) -> success** | **a1bb9e8 / e2e94b3** | GitHub | none |
 | External LLM | OPTIONAL / NOT_CONFIGURED | n/a | not required for release | n/a | deterministic + Ollama verified | no cloud creds |
 
 ## CI/CD Evidence (remote, executed this session)
@@ -33,6 +33,11 @@ Jobs (5/5 green):
   - Python AI tests                  : PASS (43 passed)
   - Compose + image build validation : PASS
   - Frontend E2E (Playwright)        : 12 passed (14.4s)
+
+Final-tip re-verification:
+Run id   : 34370445400 (workflow_dispatch, branch main)
+Head SHA : a1bb9e88a0bdb854282defd27a9d84080ce7f405
+Conclusion: SUCCESS - 5/5 jobs green on the exact final commit a1bb9e8
 ```
 
 First CI attempt (run 34368699784, head 7ce7618) correctly FAILED because the E2E job did not install the Python AI service (`uvicorn`) required by Playwright's webServer. Root cause fixed by installing `requirements.txt` in the E2E job (commit `e2e94b3`); re-run passed all jobs. This is an honest failure->fix->green sequence, not a disabled test.
