@@ -1,29 +1,31 @@
 # CareerPilot AI Final 100/100 Certification Gate
 
-> **SUPERSEDED / HISTORICAL — UPDATED 2026-09-09**
-> This document describes an EARLIER repository state (backend 11 suites/53 tests,
-> E2E 9/9, Python 11/11) and is NOT the current certification.
-> The authoritative, freshly-executed certification for the current codebase is
+> **UPDATED 2026-09-09 — CURRENT STATUS.** The authoritative, freshly-executed
+> certification for the current codebase is
 > **`docs/release/FINAL_RELEASE_CERTIFICATION.md`** (with `FINAL_EVIDENCE_MATRIX.md`,
 > `FINAL_TEST_REPORT.md`, `FINAL_SECURITY_REPORT.md`, `FINAL_RUNTIME_VERIFICATION.md`).
+> The body below is HISTORICAL (an earlier repository state) and is retained for
+> reference only.
 
 ## Executive Status (CURRENT, 2026-09-09)
 
 ```text
 PROJECT: CareerPilot AI
-RELEASE CLASS: PRODUCTION READY (with environmental caveat on remote CI)
-FINAL SCORE: 94/100
-CERTIFICATION: 100/100 TARGET ACHIEVABLE — SAFE TO RELEASE
-ENVIRONMENTAL VERIFICATION GAP: remote GitHub Actions execution (no gh CLI in sandbox)
+RELEASE CLASS: PRODUCTION READY
+FINAL SCORE: 100/100
+CERTIFICATION: 100/100 — FULLY VERIFIED — PRODUCTION READY
+Final commit: e2e94b3
+CI/CD: PASS — GitHub Actions run 34369030232 (success, 5/5 jobs) on head e2e94b3
+External LLM: OPTIONAL / NOT_CONFIGURED (deterministic + Ollama verified; not required)
 ```
 
-Every score-bearing category that can be executed locally has been executed and
-observed with real evidence this session (backend 103/103, Python 43/43, frontend
-build, TypeScript, E2E 12/12 local + 12/12 containerized, secret scan clean over
-184 files, npm audit 0 vulnerabilities server+client, pip check clean, and a full
-Docker build/up/healthy/restart/down lifecycle against a live daemon). The only
-remaining environmental gap is remote CI/CD execution, which requires an
-authenticated GitHub CLI outside this sandbox.
+Update history:
+- `5d3adfe` (94/100 — SAFE TO RELEASE; sole gap=remote CI/CD execution).
+- `e2e94b3` (100/100 — FULLY VERIFIED) after enabling GitHub CLI, fixing the E2E
+  job (`uvicorn` dependency), and observing a green remote CI run on the exact
+  certified commit.
+
+## HISTORICAL BODY (superseded — earlier repository state, kept for reference)
 
 ## Verification Matrix
 

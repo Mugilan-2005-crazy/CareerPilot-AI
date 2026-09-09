@@ -33,3 +33,13 @@ Baseline commit: 3a307aa
 
 ## Secret Scan
 - `node scripts/scan-secrets.js` -> **clean over 184 files** (36 known test placeholders ignored). Scanner is at its committed baseline (an unjustified placeholder whitelist added by a prior session was reverted).
+## Remote CI/CD (GitHub Actions) - 2026-09-09
+- Workflow: CI (.github/workflows/ci.yml at repo root)
+- Run ID: 34369030232 - Event: push (main) - Head SHA: e2e94b3
+- Conclusion: SUCCESS - 5/5 jobs green
+  - Server tests + audit        : 16 suites / 103 tests PASS
+  - Client typecheck+build+audit: PASS
+  - Python AI tests             : PASS (43 passed)
+  - Compose + image build       : PASS
+  - Frontend E2E (Playwright)   : 12 passed (14.4s)
+- Failure note: first CI run (34368699784, head 7ce7618) FAILED only because the E2E job lacked the Python AI service (uvicorn) used by Playwright's webServer. Fixed by installing requirements.txt in the E2E job (commit e2e94b3); re-run green. No tests were disabled.
