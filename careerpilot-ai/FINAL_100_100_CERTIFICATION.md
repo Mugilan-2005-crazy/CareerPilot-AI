@@ -1,16 +1,29 @@
 # CareerPilot AI Final 100/100 Certification Gate
 
-## Executive Status
+> **SUPERSEDED / HISTORICAL — UPDATED 2026-09-09**
+> This document describes an EARLIER repository state (backend 11 suites/53 tests,
+> E2E 9/9, Python 11/11) and is NOT the current certification.
+> The authoritative, freshly-executed certification for the current codebase is
+> **`docs/release/FINAL_RELEASE_CERTIFICATION.md`** (with `FINAL_EVIDENCE_MATRIX.md`,
+> `FINAL_TEST_REPORT.md`, `FINAL_SECURITY_REPORT.md`, `FINAL_RUNTIME_VERIFICATION.md`).
+
+## Executive Status (CURRENT, 2026-09-09)
 
 ```text
 PROJECT: CareerPilot AI
-RELEASE CLASS: PRODUCTION READY
-FINAL SCORE: 100/100
-100/100 CERTIFICATION: GRANTED (evidence-based)
+RELEASE CLASS: PRODUCTION READY (with environmental caveat on remote CI)
+FINAL SCORE: 94/100
+CERTIFICATION: 100/100 TARGET ACHIEVABLE — SAFE TO RELEASE
+ENVIRONMENTAL VERIFICATION GAP: remote GitHub Actions execution (no gh CLI in sandbox)
 ```
 
-Every mandatory gate was executed and observed. This document records the
-evidence rather than an assumption of readiness.
+Every score-bearing category that can be executed locally has been executed and
+observed with real evidence this session (backend 103/103, Python 43/43, frontend
+build, TypeScript, E2E 12/12 local + 12/12 containerized, secret scan clean over
+184 files, npm audit 0 vulnerabilities server+client, pip check clean, and a full
+Docker build/up/healthy/restart/down lifecycle against a live daemon). The only
+remaining environmental gap is remote CI/CD execution, which requires an
+authenticated GitHub CLI outside this sandbox.
 
 ## Verification Matrix
 
