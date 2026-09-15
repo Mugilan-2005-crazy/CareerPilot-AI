@@ -5,6 +5,7 @@ const aiCareerRoutes = require('./aiCareerRoutes');
 const skillGraphRoutes = require('./skillGraphRoutes');
 const jdIntelligenceRoutes = require('./jdIntelligenceRoutes');
 const careerTransitionRoutes = require('./careerTransitionRoutes');
+const careerTwinRoutes = require('./careerTwinRoutes');
 const v1Routes = require('./v1');
 const companyRoutes = require('./companyRoutes');
 const companyAptitudeTrainingRoutes = require('./companyAptitudeTrainingRoutes');
@@ -65,6 +66,7 @@ router.use('/ai-career', aiCareerRoutes);
 router.use('/skill-graph', skillGraphRoutes);
 router.use('/jd-intelligence', jdIntelligenceRoutes);
 router.use('/career-transition', careerTransitionRoutes);
+router.use('/career-twin', careerTwinRoutes);
 router.use('/companies', companyRoutes);
 router.use('/company-aptitude-training', companyAptitudeTrainingRoutes);
 

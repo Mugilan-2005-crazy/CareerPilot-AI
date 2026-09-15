@@ -34,12 +34,14 @@ async function _handleTask(req, res, next, task) {
 
 const matchCareers = (req, res, next) => _handleTask(req, res, next, 'career-matching');
 const analyzeSkillGapEnhanced = (req, res, next) => _handleTask(req, res, next, 'skill-gap-enhanced');
+const analyzeSkillGapAdvanced = (req, res, next) => _handleTask(req, res, next, 'skill-gap-advanced');
 const generateRoadmap = (req, res, next) => _handleTask(req, res, next, 'roadmap');
 const recommendProjects = (req, res, next) => _handleTask(req, res, next, 'project-recommendations');
 
 module.exports = {
   matchCareers,
   analyzeSkillGapEnhanced,
+  analyzeSkillGapAdvanced,
   generateRoadmap,
   recommendProjects,
 };

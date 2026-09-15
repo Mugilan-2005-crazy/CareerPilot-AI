@@ -42,6 +42,16 @@ module.exports = {
     target_career: text,
     experience_years: z.number().int().min(0).max(60).default(0),
   })),
+  'skill-gap-advanced': strict(z.object({
+    target_career: text,
+    current_skills: list.default([]),
+    experience_years: z.number().int().min(0).max(60).default(0),
+    skill_evidence: z.array(z.object({
+      skill: text,
+      proficiency: z.enum(['unknown', 'beginner', 'intermediate', 'advanced', 'expert']),
+      evidence_count: z.number().int().min(0).max(50).default(0),
+    })).max(100).default([]),
+  })),
   'roadmap': strict(z.object({
     target_career: text,
     current_skills: list,

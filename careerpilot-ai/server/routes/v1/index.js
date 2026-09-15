@@ -5,6 +5,7 @@ const aiCareerRoutes = require('../aiCareerRoutes');
 const skillGraphRoutes = require('../skillGraphRoutes');
 const jdIntelligenceRoutes = require('../jdIntelligenceRoutes');
 const careerTransitionRoutes = require('../careerTransitionRoutes');
+const careerTwinRoutes = require('../careerTwinRoutes');
 const userRoutes = require('./userRoutes');
 
 const router = express.Router();
@@ -30,6 +31,7 @@ router.use('/ai-career', aiCareerRoutes);
 router.use('/skill-graph', skillGraphRoutes);
 router.use('/jd-intelligence', jdIntelligenceRoutes);
 router.use('/career-transition', careerTransitionRoutes);
+router.use('/career-twin', careerTwinRoutes);
 router.use('/users', userRoutes);
 
 module.exports = router;

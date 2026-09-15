@@ -19,6 +19,14 @@ class SkillGapEnhancedRequest(BaseModel):
     experience_years: int = Field(0, ge=0, le=60)
 
 
+class SkillGapAdvancedRequest(BaseModel):
+    model_config = STRICT
+    target_career: str = Field(..., min_length=1, max_length=200)
+    current_skills: List[str] = Field(default_factory=list, max_length=100)
+    experience_years: int = Field(0, ge=0, le=60)
+    skill_evidence: List[Dict[str, Any]] = Field(default_factory=list, max_length=100)
+
+
 class RoadmapRequest(BaseModel):
     model_config = STRICT
     target_career: str = Field(..., min_length=1, max_length=200)

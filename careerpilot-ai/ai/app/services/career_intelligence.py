@@ -3,6 +3,7 @@ import random
 
 from app.services.skill_graph import (
     get_prerequisites,
+    get_dependents,
     get_related_skills,
     get_learning_order,
     analyze_skill_coverage,
@@ -476,6 +477,148 @@ def generate_roadmap(payload: Dict[str, Any]) -> Dict[str, Any]:
         "available_hours_per_week": available_hours,
         "milestones": milestones,
         "estimated_completion": f"{duration_months} months",
+        "source": "heuristic",
+    }
+
+
+def analyze_skill_gap_advanced(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Advanced, explainable skill-gap analysis (v1.1 P0).
+
+    Extends the flat present/missing analysis with required vs estimated
+    current proficiency, evidence strength, confidence, gap severity,
+    dependency impact (via the skill graph), and explainable priority
+    buckets. No external market data is used or claimed. If proficiency
+    evidence is not supplied for a claimed skill, the current level is
+    reported as "unknown" with low confidence rather than guessed.
+    """
+    target_career = payload.get("target_career", "").strip().lower()
+    current_skills = [_normalize_skill(s) for s in payload.get("current_skills", [])]
+    evidence_input = {
+        _normalize_skill(e.get("skill", "")): e
+        for e in payload.get("skill_evidence", [])
+        if isinstance(e, dict) and e.get("skill")
+    }
+
+    career = next((c for c in CAREERS if target_career in c["name"].lower() or target_career in c["id"]), None)
+    if not career:
+        return {
+            "target_career": target_career,
+            "gaps": [],
+            "buckets": {"critical": [], "high_impact": [], "supporting": [], "optional": []},
+            "known_target": False,
+            "source": "heuristic",
+        }
+    return _build_advanced_gaps(career, current_skills, evidence_input)
+
+
+def _build_advanced_gaps(career, current_skills, evidence_input):
+    LEVEL_SCORE = {"unknown": 0, "beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
+    career_skill_names = list(dict.fromkeys(
+        [_normalize_skill(s) for s in career["required_skills"]]
+        + [_normalize_skill(s) for s in career.get("preferred_skills", [])]
+    ))
+    required_names = {_normalize_skill(s) for s in career["required_skills"]}
+
+    gaps = []
+    for skill in career_skill_names:
+        is_required = skill in required_names
+        required_level = "advanced" if is_required else "intermediate"
+
+        ev = evidence_input.get(skill)
+        if ev and ev.get("proficiency") in LEVEL_SCORE:
+            current_level = ev["proficiency"]
+            ev_count = int(ev.get("evidence_count", 0) or 0)
+            confidence = "high" if ev_count >= 3 else ("medium" if ev_count >= 1 else "low")
+            evidence_strength = ("strong" if ev_count >= 3 else
+                                 "moderate" if ev_count == 2 else
+                                 "weak" if ev_count == 1 else "none")
+        elif skill in current_skills:
+            current_level = "unknown"
+            confidence = "low"
+            evidence_strength = "weak"
+        else:
+            current_level = "none"
+            confidence = "high"
+            evidence_strength = "none"
+
+        current_score = LEVEL_SCORE.get(current_level, 0)
+        required_score = LEVEL_SCORE[required_level]
+        gap_size = max(0, required_score - current_score)
+
+        severity = {0: "none", 1: "low", 2: "medium"}.get(gap_size, "high")
+        dependents = [d for d in get_dependents(skill) if d in career_skill_names]
+        dependency_impact = len(dependents)
+
+        if severity == "none":
+            priority = "P3"
+        elif is_required and severity == "high":
+            priority = "P0"
+        elif is_required and (severity == "medium" or dependency_impact > 0):
+            priority = "P1"
+        elif severity in ("medium", "high"):
+            priority = "P1" if dependency_impact > 0 else "P2"
+        else:
+            priority = "P2"
+
+        reason = (
+            f"{career['name']} requires {required_level} proficiency in {skill}; "
+            f"estimated current level is {current_level} "
+            f"(evidence: {evidence_strength}, confidence: {confidence})."
+        )
+        if dependency_impact > 0 and gap_size > 0:
+            reason += f" {dependency_impact} other target skill(s) build on it: {', '.join(dependents[:3])}."
+
+        improvement_path = []
+        if gap_size > 0:
+            prereqs = [p for p in get_prerequisites(skill) if p not in current_skills]
+            if prereqs:
+                improvement_path.append(f"Cover prerequisites first: {', '.join(prereqs[:3])}")
+            improvement_path.append(
+                f"Raise {skill} from {current_level} to {required_level} "
+                f"through targeted practice and one demonstrable project."
+            )
+
+        gaps.append({
+            "skill": skill,
+            "required": is_required,
+            "required_proficiency": required_level,
+            "current_proficiency": current_level,
+            "evidence_strength": evidence_strength,
+            "confidence": confidence,
+            "gap_severity": severity,
+            "gap_size": gap_size,
+            "dependency_impact": dependency_impact,
+            "dependency_skills": dependents,
+            "priority": priority,
+            "reason": reason,
+            "improvement_path": improvement_path,
+        })
+
+    return _finalize_advanced_gaps(career, gaps, LEVEL_SCORE)
+
+
+def _finalize_advanced_gaps(career, gaps, LEVEL_SCORE):
+    buckets = {
+        "critical": [g["skill"] for g in gaps if g["priority"] == "P0"],
+        "high_impact": [g["skill"] for g in gaps if g["priority"] == "P1"],
+        "supporting": [g["skill"] for g in gaps if g["priority"] == "P2"],
+        "optional": [g["skill"] for g in gaps if g["priority"] == "P3"],
+    }
+    # Transparent heuristic readiness: demonstrated proficiency vs required
+    # proficiency across the target skill set. Explicitly not a prediction.
+    total_required = sum(LEVEL_SCORE[g["required_proficiency"]] for g in gaps)
+    current_total = sum(
+        min(LEVEL_SCORE.get(g["current_proficiency"], 0), LEVEL_SCORE[g["required_proficiency"]])
+        for g in gaps
+    )
+    readiness = round((current_total / total_required) * 100, 1) if total_required else 0.0
+    return {
+        "target_career": career["name"],
+        "gaps": sorted(gaps, key=lambda g: (g["priority"], -g["gap_size"])),
+        "buckets": buckets,
+        "heuristic_readiness_estimate": readiness,
+        "readiness_disclaimer": "Heuristic estimate from stored skill evidence only. Not a hiring or market prediction.",
+        "known_target": True,
         "source": "heuristic",
     }
 

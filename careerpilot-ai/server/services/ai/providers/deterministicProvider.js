@@ -15,6 +15,7 @@ async function request(task, payload, requestId) {
     'interview-questions': '/api/ai/interview-questions',
     'career-matching': '/api/ai/career-matching',
     'skill-gap-enhanced': '/api/ai/skill-gap-enhanced',
+    'skill-gap-advanced': '/api/ai/skill-gap-advanced',
     'roadmap': '/api/ai/roadmap',
     'project-recommendations': '/api/ai/project-recommendations',
     'jd-analysis': '/api/ai/jd-analysis',

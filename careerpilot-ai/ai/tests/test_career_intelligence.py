@@ -56,6 +56,72 @@ def test_project_recommendations_returns_recommendations():
     assert body["count"] >= 0
 
 
+def test_skill_gap_advanced_returns_explainable_gaps():
+    resp = client.post(
+        "/api/ai/skill-gap-advanced",
+        json={
+            "target_career": "Data Scientist",
+            "current_skills": ["python"],
+            "skill_evidence": [
+                {"skill": "python", "proficiency": "intermediate", "evidence_count": 3}
+            ],
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["known_target"] is True
+    assert isinstance(body["gaps"], list) and body["gaps"]
+    gap = body["gaps"][0]
+    for key in (
+        "required_proficiency",
+        "current_proficiency",
+        "evidence_strength",
+        "confidence",
+        "gap_severity",
+        "priority",
+        "reason",
+        "improvement_path",
+    ):
+        assert key in gap
+    assert set(body["buckets"].keys()) == {"critical", "high_impact", "supporting", "optional"}
+    assert 0 <= body["heuristic_readiness_estimate"] <= 100
+    # Claimed skill without proficiency evidence must NOT be guessed.
+    python_gap = next(g for g in body["gaps"] if g["skill"] == "python")
+    assert python_gap["current_proficiency"] == "intermediate"
+    assert python_gap["evidence_strength"] == "strong"
+
+
+def test_skill_gap_advanced_unknown_claimed_skill_not_guessed():
+    resp = client.post(
+        "/api/ai/skill-gap-advanced",
+        json={"target_career": "Data Scientist", "current_skills": ["statistics"]},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    gap = next(g for g in body["gaps"] if g["skill"] == "statistics")
+    assert gap["current_proficiency"] == "unknown"
+    assert gap["confidence"] == "low"
+
+
+def test_skill_gap_advanced_unknown_target_career():
+    resp = client.post(
+        "/api/ai/skill-gap-advanced",
+        json={"target_career": "astronaut", "current_skills": ["python"]},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["known_target"] is False
+    assert body["gaps"] == []
+
+
+def test_skill_gap_advanced_rejects_extra_fields():
+    resp = client.post(
+        "/api/ai/skill-gap-advanced",
+        json={"target_career": "Data Scientist", "current_skills": ["python"], "injected": True},
+    )
+    assert resp.status_code == 422
+
+
 def test_jd_analysis_returns_match_score():
     resp = client.post(
         "/api/ai/jd-analysis",
