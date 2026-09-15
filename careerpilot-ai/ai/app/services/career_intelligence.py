@@ -623,6 +623,167 @@ def _finalize_advanced_gaps(career, gaps, LEVEL_SCORE):
     }
 
 
+def match_career_v2(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Explainable Career Match V2 (v1.1 Phase 2).
+
+    Multi-dimension alignment between an evidence-aware candidate profile and
+    a target career. Deterministic and graph-driven. Dimensions:
+      - skillMatch: proficiency-weighted coverage of required/preferred skills
+      - evidenceMatch: how much of that coverage is evidence-backed
+      - experienceMatch: from experience_years (labelled insufficient when absent)
+      - projectMatch: from projects_count (same policy)
+
+    Output language is deliberately "estimated alignment" — never an
+    employment probability or hiring prediction.
+    """
+    target_career = payload.get("target_career", "").strip().lower()
+    current_skills = [_normalize_skill(s) for s in payload.get("current_skills", [])]
+    evidence_input = {
+        _normalize_skill(e.get("skill", "")): e
+        for e in payload.get("skill_evidence", [])
+        if isinstance(e, dict) and e.get("skill")
+    }
+    experience_years = payload.get("experience_years")
+    projects_count = payload.get("projects_count")
+
+    career = next((c for c in CAREERS if target_career in c["name"].lower() or target_career in c["id"]), None)
+    if not career:
+        return {
+            "target_career": target_career,
+            "known_target": False,
+            "overall_alignment": 0,
+            "confidence": "none",
+            "dimensions": [],
+            "strong_areas": [],
+            "risk_areas": ["Target career is not in the supported career catalog."],
+            "missing_requirements": [],
+            "recommended_actions": [],
+            "disclaimer": "Estimated alignment based on stored evidence only. Not an employment prediction.",
+            "source": "heuristic",
+        }
+
+    LEVEL_SCORE = {"none": 0, "unknown": 0, "beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
+    required = [_normalize_skill(s) for s in career["required_skills"]]
+    preferred = [_normalize_skill(s) for s in career.get("preferred_skills", [])]
+
+    def _proficiency(skill):
+        ev = evidence_input.get(skill)
+        if ev and ev.get("proficiency") in LEVEL_SCORE:
+            return ev["proficiency"], int(ev.get("evidence_count", 0) or 0)
+        if skill in current_skills:
+            return "unknown", 0  # claimed, no evidence
+        return "none", 0
+
+    # --- skillMatch: weighted coverage vs required proficiency levels ---
+    total_weight, achieved = 0.0, 0.0
+    matched, partially, missing = [], [], []
+    for skill in required:
+        prof, _ = _proficiency(skill)
+        req_score = LEVEL_SCORE["advanced"]
+        got = LEVEL_SCORE[prof]
+        total_weight += req_score
+        achieved += min(got, req_score)
+        ratio = min(got, req_score) / req_score
+        if ratio >= 1:
+            matched.append(skill)
+        elif ratio > 0:
+            partially.append(skill)
+        else:
+            missing.append(skill)
+    for skill in preferred:
+        prof, _ = _proficiency(skill)
+        req_score = LEVEL_SCORE["intermediate"]
+        got = LEVEL_SCORE[prof]
+        total_weight += req_score * 0.5  # preferred skills weigh half
+        achieved += min(got, req_score) * 0.5
+    skill_match = round((achieved / total_weight) * 100, 1) if total_weight else 0.0
+
+    # --- evidenceMatch: of skills claimed, how many are backed ---
+    claimed = [s for s in dict.fromkeys(required + preferred)
+               if _proficiency(s)[0] != "none"]
+    backed = [s for s in claimed if _proficiency(s)[1] >= 1]
+    evidence_match = round((len(backed) / len(claimed)) * 100, 1) if claimed else 0.0
+
+    return _finalize_match_v2(
+        career, dimensions=None, matched=matched, partially=partially,
+        missing=missing, claimed=claimed, backed=backed,
+        skill_match=skill_match, evidence_match=evidence_match,
+        experience_years=experience_years, projects_count=projects_count,
+    )
+
+
+def _finalize_match_v2(career, dimensions, matched, partially, missing, claimed,
+                       backed, skill_match, evidence_match,
+                       experience_years, projects_count):
+    # --- experienceMatch / projectMatch: only from supplied data ---
+    if experience_years is None:
+        experience_match = None
+        experience_reason = "Insufficient evidence — no experience data supplied."
+    else:
+        years = max(0, min(int(experience_years), 60))
+        experience_match = round(min(years / 3.0, 1.0) * 100, 1)
+        experience_reason = f"Estimated from {experience_years} year(s) of experience."
+
+    if projects_count is None:
+        project_match = None
+        project_reason = "Insufficient evidence — no project data supplied."
+    else:
+        projects = max(0, min(int(projects_count), 20))
+        project_match = round(min(projects / 3.0, 1.0) * 100, 1)
+        project_reason = f"Estimated from {projects_count} project(s)."
+
+    dimensions = [
+        {"name": "skillMatch", "score": skill_match,
+         "reason": f"{len(matched)} required skill(s) at required proficiency, "
+                   f"{len(partially)} partial, {len(missing)} missing."},
+        {"name": "evidenceMatch", "score": evidence_match,
+         "reason": f"{len(backed)} of {len(claimed)} claimed skill(s) have supporting evidence."},
+        {"name": "experienceMatch", "score": experience_match, "reason": experience_reason},
+        {"name": "projectMatch", "score": project_match, "reason": project_reason},
+    ]
+
+    # Weighted overall using only dimensions that have evidence behind them.
+    weights = {"skillMatch": 0.5, "evidenceMatch": 0.3, "experienceMatch": 0.1, "projectMatch": 0.1}
+    scored = [d for d in dimensions if d["score"] is not None]
+    w_total = sum(weights[d["name"]] for d in scored)
+    overall = round(sum(d["score"] * weights[d["name"]] for d in scored) / w_total, 1) if scored and w_total else 0.0
+
+    confidence = ("high" if len(scored) >= 3 and evidence_match >= 50
+                  else "medium" if len(scored) >= 2 else "low")
+
+    risk_areas = []
+    if evidence_match < 50:
+        risk_areas.append("More than half of your claimed skills have no supporting evidence.")
+    if experience_match is None:
+        risk_areas.append("No experience data on record — experience alignment is unknown.")
+    if project_match is None:
+        risk_areas.append("No project data on record — portfolio alignment is unknown.")
+
+    recommended_actions = []
+    if missing:
+        recommended_actions.append(f"Close the highest-priority gap: {missing[0]}.")
+    if partially:
+        recommended_actions.append(
+            f"Raise {partially[0]} to the required proficiency through one demonstrable project.")
+    if evidence_match < 50:
+        recommended_actions.append(
+            "Add evidence (project, assessment, or repository) for your strongest claimed skills.")
+
+    return {
+        "target_career": career["name"],
+        "known_target": True,
+        "overall_alignment": overall,
+        "confidence": confidence,
+        "dimensions": dimensions,
+        "strong_areas": matched,
+        "risk_areas": risk_areas,
+        "missing_requirements": missing,
+        "recommended_actions": recommended_actions[:4],
+        "disclaimer": "Estimated alignment based on stored evidence only. Not an employment prediction.",
+        "source": "heuristic",
+    }
+
+
 def recommend_projects(payload: Dict[str, Any]) -> Dict[str, Any]:
     target_career = payload.get("target_career", "").strip().lower()
     current_skills = [_normalize_skill(s) for s in payload.get("current_skills", [])]

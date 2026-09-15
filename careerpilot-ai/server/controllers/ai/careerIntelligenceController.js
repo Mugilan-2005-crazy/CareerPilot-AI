@@ -35,6 +35,7 @@ async function _handleTask(req, res, next, task) {
 const matchCareers = (req, res, next) => _handleTask(req, res, next, 'career-matching');
 const analyzeSkillGapEnhanced = (req, res, next) => _handleTask(req, res, next, 'skill-gap-enhanced');
 const analyzeSkillGapAdvanced = (req, res, next) => _handleTask(req, res, next, 'skill-gap-advanced');
+const matchCareerV2 = (req, res, next) => _handleTask(req, res, next, 'career-match-v2');
 const generateRoadmap = (req, res, next) => _handleTask(req, res, next, 'roadmap');
 const recommendProjects = (req, res, next) => _handleTask(req, res, next, 'project-recommendations');
 
@@ -42,6 +43,8 @@ module.exports = {
   matchCareers,
   analyzeSkillGapEnhanced,
   analyzeSkillGapAdvanced,
+  matchCareerV2,
   generateRoadmap,
   recommendProjects,
+  sanitizeOutput,
 };

@@ -11,6 +11,7 @@ from app.schemas.analysis import (
 )
 from app.schemas.career_intelligence import (
     CareerMatchRequest,
+    CareerMatchV2Request,
     SkillGapEnhancedRequest,
     SkillGapAdvancedRequest,
     RoadmapRequest,
@@ -31,6 +32,7 @@ from app.services.analysis_service import (
 )
 from app.services.career_intelligence import (
     match_careers,
+    match_career_v2,
     analyze_skill_gap_enhanced,
     analyze_skill_gap_advanced,
     generate_roadmap,
@@ -97,6 +99,11 @@ def skill_gap_enhanced(payload: SkillGapEnhancedRequest):
 @router.post("/skill-gap-advanced")
 def skill_gap_advanced(payload: SkillGapAdvancedRequest):
     return _guard(analyze_skill_gap_advanced, payload.model_dump())
+
+
+@router.post("/career-match-v2")
+def career_match_v2(payload: CareerMatchV2Request):
+    return _guard(match_career_v2, payload.model_dump())
 
 
 @router.post("/roadmap")

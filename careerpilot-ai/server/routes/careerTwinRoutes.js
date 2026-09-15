@@ -5,6 +5,9 @@ const {
   updateMyTwin,
   exportMyTwin,
   deleteMyTwin,
+  getMyTimeline,
+  getMyProgress,
+  getMyCareerMatch,
 } = require('../controllers/careerTwinController');
 const { getMyNextBestAction } = require('../services/nextBestAction');
 
@@ -18,5 +21,8 @@ router.put('/', updateMyTwin);
 router.get('/export', exportMyTwin);
 router.delete('/', deleteMyTwin);
 router.get('/next-best-action', getMyNextBestAction);
+router.get('/timeline', getMyTimeline);
+router.get('/progress', getMyProgress);
+router.post('/career-match', getMyCareerMatch);
 
 module.exports = router;

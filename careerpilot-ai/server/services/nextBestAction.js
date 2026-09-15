@@ -44,6 +44,8 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
         expectedOutcome: 'Personalized skill gaps, career matches, and a next-best-action loop.',
         effort: '10-20 minutes',
         priority: 'P0',
+        roi: 'HIGH',
+        kind: 'evidence',
       },
       secondary: [],
       optional: [],
@@ -61,6 +63,7 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
       expectedOutcome: 'Higher-confidence skill profile and more reliable career matches.',
       effort: '5 minutes per skill',
       priority: 'P1',
+      roi: 'HIGH',
       kind: 'evidence',
     });
   }
@@ -76,6 +79,7 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
       expectedOutcome: `Reduces the highest-priority gap blocking ${skillGapReport.role || targetRoles[0] || 'your target role'}.`,
       effort: 'Depends on the skill — schedule it on your roadmap',
       priority: 'P0',
+      roi: 'HIGH',
       kind: 'skill-gap',
     });
   }
@@ -91,6 +95,7 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
       expectedOutcome: 'Roadmap progress and refreshed readiness signals.',
       effort: 'Per your plan',
       priority: 'P1',
+      roi: 'MEDIUM',
       kind: 'roadmap',
     });
   }
@@ -103,6 +108,7 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
       expectedOutcome: 'Gap analysis and roadmap generation become possible.',
       effort: '5 minutes',
       priority: 'P1',
+      roi: 'HIGH',
       kind: 'goal',
     });
   }
@@ -115,12 +121,18 @@ function computeNextBestActions({ twin, skillGapReport, roadmap }) {
       expectedOutcome: 'Measured readiness signal and updated twin confidence.',
       effort: '20-40 minutes',
       priority: 'P2',
+      roi: 'MEDIUM',
       kind: 'validation',
     });
   }
 
   const order = { P0: 0, P1: 1, P2: 2 };
-  candidates.sort((a, b) => (order[a.priority] ?? 3) - (order[b.priority] ?? 3));
+  const roiOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+  candidates.sort(
+    (a, b) =>
+      (order[a.priority] ?? 3) - (order[b.priority] ?? 3) ||
+      (roiOrder[a.roi] ?? 3) - (roiOrder[b.roi] ?? 3),
+  );
   actions.primary = candidates[0] || null;
   actions.secondary = candidates.slice(1, 3);
   actions.optional = candidates.slice(3, 6);

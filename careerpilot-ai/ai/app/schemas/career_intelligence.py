@@ -27,6 +27,15 @@ class SkillGapAdvancedRequest(BaseModel):
     skill_evidence: List[Dict[str, Any]] = Field(default_factory=list, max_length=100)
 
 
+class CareerMatchV2Request(BaseModel):
+    model_config = STRICT
+    target_career: str = Field(..., min_length=1, max_length=200)
+    current_skills: List[str] = Field(default_factory=list, max_length=100)
+    skill_evidence: List[Dict[str, Any]] = Field(default_factory=list, max_length=100)
+    experience_years: Optional[int] = Field(None, ge=0, le=60)
+    projects_count: Optional[int] = Field(None, ge=0, le=20)
+
+
 class RoadmapRequest(BaseModel):
     model_config = STRICT
     target_career: str = Field(..., min_length=1, max_length=200)

@@ -7,6 +7,7 @@ const {
   matchCareers,
   analyzeSkillGapEnhanced,
   analyzeSkillGapAdvanced,
+  matchCareerV2,
   generateRoadmap,
   recommendProjects,
 } = require('../controllers/ai/careerIntelligenceController');
@@ -17,6 +18,7 @@ router.use(authMiddleware);
 router.use(aiLimiter);
 
 router.post('/career-matching', validateRequest(aiSchemas['career-matching']), matchCareers);
+router.post('/career-match-v2', validateRequest(aiSchemas['career-match-v2']), matchCareerV2);
 router.post('/skill-gap-enhanced', validateRequest(aiSchemas['skill-gap-enhanced']), analyzeSkillGapEnhanced);
 router.post('/skill-gap-advanced', validateRequest(aiSchemas['skill-gap-advanced']), analyzeSkillGapAdvanced);
 router.post('/roadmap', validateRequest(aiSchemas['roadmap']), generateRoadmap);

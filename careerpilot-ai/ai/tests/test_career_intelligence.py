@@ -122,6 +122,81 @@ def test_skill_gap_advanced_rejects_extra_fields():
     assert resp.status_code == 422
 
 
+def test_career_match_v2_returns_explainable_dimensions():
+    resp = client.post(
+        "/api/ai/career-match-v2",
+        json={
+            "target_career": "Data Scientist",
+            "current_skills": ["python", "statistics"],
+            "skill_evidence": [
+                {"skill": "python", "proficiency": "advanced", "evidence_count": 4},
+                {"skill": "statistics", "proficiency": "intermediate", "evidence_count": 2},
+            ],
+            "experience_years": 1,
+            "projects_count": 2,
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["known_target"] is True
+    assert 0 <= body["overall_alignment"] <= 100
+    assert body["confidence"] in ("low", "medium", "high")
+    names = {d["name"] for d in body["dimensions"]}
+    assert names == {"skillMatch", "evidenceMatch", "experienceMatch", "projectMatch"}
+    for dim in body["dimensions"]:
+        assert dim["reason"]
+    assert "employment" in body["disclaimer"] or "prediction" in body["disclaimer"]
+    assert "python" in body["strong_areas"]
+
+
+def test_career_match_v2_unknown_proficiency_not_guessed():
+    # Claimed skill without evidence: must count as unknown, not assumed.
+    resp = client.post(
+        "/api/ai/career-match-v2",
+        json={"target_career": "Data Scientist", "current_skills": ["machine learning"]},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["confidence"] in ("low", "medium", "high")
+    assert "machine learning" in body["missing_requirements"] or body["overall_alignment"] < 100
+
+
+def test_career_match_v2_missing_dimensions_labelled_insufficient():
+    resp = client.post(
+        "/api/ai/career-match-v2",
+        json={
+            "target_career": "Data Scientist",
+            "current_skills": ["python"],
+            "skill_evidence": [{"skill": "python", "proficiency": "advanced", "evidence_count": 3}],
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    dims = {d["name"]: d for d in body["dimensions"]}
+    assert dims["experienceMatch"]["score"] is None
+    assert "Insufficient evidence" in dims["experienceMatch"]["reason"]
+    assert dims["projectMatch"]["score"] is None
+    assert any("experience" in r.lower() for r in body["risk_areas"])
+
+
+def test_career_match_v2_unknown_target():
+    resp = client.post(
+        "/api/ai/career-match-v2",
+        json={"target_career": "astronaut", "current_skills": ["python"]},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["known_target"] is False
+
+
+def test_career_match_v2_rejects_extra_fields():
+    resp = client.post(
+        "/api/ai/career-match-v2",
+        json={"target_career": "Data Scientist", "hack": True},
+    )
+    assert resp.status_code == 422
+
+
 def test_jd_analysis_returns_match_score():
     resp = client.post(
         "/api/ai/jd-analysis",

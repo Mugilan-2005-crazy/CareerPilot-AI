@@ -37,6 +37,17 @@ module.exports = {
     experience_years: z.number().int().min(0).max(60).default(0),
     target_domains: list.default([]),
   })),
+  'career-match-v2': strict(z.object({
+    target_career: text,
+    current_skills: list.default([]),
+    skill_evidence: z.array(z.object({
+      skill: text,
+      proficiency: z.enum(['unknown', 'beginner', 'intermediate', 'advanced', 'expert']),
+      evidence_count: z.number().int().min(0).max(50).default(0),
+    })).max(100).default([]),
+    experience_years: z.number().int().min(0).max(60).nullable().optional(),
+    projects_count: z.number().int().min(0).max(20).nullable().optional(),
+  })),
   'skill-gap-enhanced': strict(z.object({
     current_skills: list,
     target_career: text,

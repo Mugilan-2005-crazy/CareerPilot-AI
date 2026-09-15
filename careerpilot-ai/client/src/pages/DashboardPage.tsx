@@ -12,6 +12,29 @@ interface Stats {
   lastAtsScore: string | null;
 }
 
+interface NbaAction {
+  title: string;
+  why: string;
+  expectedOutcome: string;
+  effort: string;
+  priority: string;
+  roi?: string;
+  kind?: string;
+}
+
+interface NbaData {
+  primary: NbaAction | null;
+  secondary: NbaAction[];
+  optional: NbaAction[];
+  context: { evidenceStrength: number | null; targetRole: string | null; twinVersion: number | null };
+}
+
+interface ProgressData {
+  status: string;
+  snapshots?: number;
+  change?: { evidenceStrength: number; skillCount: number };
+}
+
 const emptyStats: Stats = {
   resumeCount: 0,
   mockInterviewCount: 0,
@@ -20,13 +43,21 @@ const emptyStats: Stats = {
   lastAtsScore: null,
 };
 
-async function loadStats(setStats: (s: Stats) => void, setError: (m: string | null) => void) {
+async function loadStats(
+  setStats: (s: Stats) => void,
+  setError: (m: string | null) => void,
+  setNba: (n: NbaData | null) => void,
+  setProgress: (p: ProgressData | null) => void,
+) {
   try {
-    const [resumes, interviews, analyses, progress] = await Promise.all([
+    const [resumes, interviews, analyses, progress, nba, twinProgress] = await Promise.all([
       apiClient.get('/api/resumes').catch(() => ({ data: [] })),
       apiClient.get('/api/mock-interviews').catch(() => ({ data: [] })),
       apiClient.get('/api/resume-analyses').catch(() => ({ data: [] })),
       apiClient.get('/api/progress').catch(() => ({ data: [] })),
+      // Career Intelligence loop (v1.1). Non-fatal when unavailable.
+      apiClient.get('/api/v1/career-twin/next-best-action').catch(() => null),
+      apiClient.get('/api/v1/career-twin/progress').catch(() => null),
     ]);
 
     const resumesList = (resumes && resumes.data) || [];
@@ -40,6 +71,8 @@ async function loadStats(setStats: (s: Stats) => void, setError: (m: string | nu
       progressCount: (progress && progress.data) ? progress.data.length : 0,
       lastAtsScore: lastAnalysis && lastAnalysis.atsScore != null ? `${lastAnalysis.atsScore}%` : null,
     });
+    setNba(nba && nba.success ? (nba.data as NbaData) : null);
+    setProgress(twinProgress && twinProgress.success ? (twinProgress.data as ProgressData) : null);
     setError(null);
   } catch {
     setStats(emptyStats);
@@ -51,11 +84,13 @@ export default function DashboardPage() {
   const [dark, setDark] = useState(true);
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [error, setError] = useState<string | null>(null);
+  const [nba, setNba] = useState<NbaData | null>(null);
+  const [twinProgress, setTwinProgress] = useState<ProgressData | null>(null);
   const { user, logout, loading: authLoading } = useAuth();
 
   useEffect(() => {
     if (!authLoading) {
-      loadStats(setStats, setError);
+      loadStats(setStats, setError, setNba, setTwinProgress);
     }
   }, [authLoading]);
 
@@ -103,6 +138,47 @@ export default function DashboardPage() {
         </header>
 
         {error && <div className="mb-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>}
+
+        {nba && nba.primary && (
+          <div className={`mb-6 rounded-3xl border p-6 shadow-soft ${dark ? 'border-amber-400/20 bg-slate-900/70' : 'border-amber-300 bg-white'}`}>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className={`text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>Next Best Action</p>
+                <h2 className={`text-xl font-semibold ${dark ? 'text-white' : 'text-slate-900'}`}>{nba.primary.title}</h2>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="rounded-full bg-amber-400/10 px-3 py-1 text-amber-300">{nba.primary.priority}</span>
+                {nba.primary.roi && <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-emerald-300">ROI {nba.primary.roi}</span>}
+                {nba.context.evidenceStrength != null && (
+                  <span className={`rounded-full px-3 py-1 ${dark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                    Evidence strength {nba.context.evidenceStrength}/100
+                  </span>
+                )}
+              </div>
+            </div>
+            <p className={`text-sm ${dark ? 'text-slate-300' : 'text-slate-600'}`}>{nba.primary.why}</p>
+            <p className={`mt-1 text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Expected outcome: {nba.primary.expectedOutcome} · Effort: {nba.primary.effort}
+            </p>
+            {twinProgress && twinProgress.status === 'ok' && twinProgress.change && (
+              <p className={`mt-3 text-sm ${dark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Progress since baseline: evidence strength {twinProgress.change.evidenceStrength >= 0 ? '+' : ''}
+                {twinProgress.change.evidenceStrength}, skills {twinProgress.change.skillCount >= 0 ? '+' : ''}
+                {twinProgress.change.skillCount} ({twinProgress.snapshots} snapshots)
+              </p>
+            )}
+            {nba.secondary.length > 0 && (
+              <ul className="mt-3 space-y-1 text-sm text-slate-400">
+                {nba.secondary.map((a) => (
+                  <li key={a.title} className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-brand-400" />
+                    <span><span className="text-slate-300">{a.title}</span> — {a.why}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {overviewCards.map((card, index) => (

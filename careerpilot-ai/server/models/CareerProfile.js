@@ -70,7 +70,6 @@ const careerTwinSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-careerTwinSchema.index({ user: 1 }, { unique: true });
 careerTwinSchema.index({ 'skills.name': 1 });
 
 careerTwinSchema.methods.incrementVersion = function incrementVersion() {

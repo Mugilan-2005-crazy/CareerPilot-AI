@@ -150,6 +150,136 @@ describe('career digital twin (REAL MONGODB)', () => {
   });
 });
 
+describe('career timeline + progress + career match (REAL MONGODB)', () => {
+  const orchestrator = require('../services/ai/orchestrator');
+
+  test('timeline records twin transitions; progress returns insufficient evidence until 2 snapshots', async () => {
+    const alice = await registerUser('tl-a@example.com');
+    await request(app).get('/api/v1/career-twin').set('Authorization', `Bearer ${alice.token}`);
+
+    const put1 = await request(app)
+      .put('/api/v1/career-twin')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send(TWIN_PATCH);
+    expect(put1.status).toBe(200);
+    expect(put1.body.meta.eventsRecorded).toBeGreaterThan(0);
+
+    // Update proficiency AND add a second evidence item on the existing skill.
+    const put2 = await request(app)
+      .put('/api/v1/career-twin')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({
+        skills: [{
+          name: 'react',
+          proficiency: 'advanced',
+          confidence: 0.9,
+          evidence: [
+            { source: 'user-provided', ref: 'portfolio', weight: 0.7 },
+            { source: 'externally-verified', ref: 'assessment:react', weight: 0.9 },
+          ],
+        }],
+      });
+    expect(put2.status).toBe(200);
+
+    const tl = await request(app)
+      .get('/api/v1/career-twin/timeline?limit=50')
+      .set('Authorization', `Bearer ${alice.token}`);
+    expect(tl.status).toBe(200);
+    const types = tl.body.data.events.map((e) => e.type);
+    expect(types).toContain('twin_created');
+    expect(types).toContain('skill_added');
+    expect(types).toContain('evidence_added');
+    expect(types).toContain('proficiency_changed');
+    expect(types).toContain('target_role_changed');
+    expect(tl.body.data.events.length).toBeLessThanOrEqual(50);
+
+    // progress: two snapshots exist now -> before/after comparison.
+    const prog = await request(app)
+      .get('/api/v1/career-twin/progress')
+      .set('Authorization', `Bearer ${alice.token}`);
+    expect(prog.status).toBe(200);
+    expect(prog.body.data.status).toBe('ok');
+    expect(prog.body.data.change.evidenceStrength).toBeGreaterThan(0);
+    expect(prog.body.data.baseline.twinVersion).toBeLessThanOrEqual(prog.body.data.current.twinVersion);
+  });
+
+  test('progress returns insufficient_evidence with fewer than two snapshots', async () => {
+    const bob = await registerUser('tl-b@example.com');
+    const prog = await request(app)
+      .get('/api/v1/career-twin/progress')
+      .set('Authorization', `Bearer ${bob.token}`);
+    expect(prog.status).toBe(200);
+    expect(prog.body.data.status).toBe('insufficient_evidence');
+  });
+
+  test('timeline is owner-scoped: bob never sees alice events', async () => {
+    const alice = await registerUser('tl-c@example.com');
+    const bob = await registerUser('tl-d@example.com');
+    await request(app).get('/api/v1/career-twin').set('Authorization', `Bearer ${alice.token}`);
+    await request(app).put('/api/v1/career-twin').set('Authorization', `Bearer ${alice.token}`).send(TWIN_PATCH);
+
+    const bobTl = await request(app)
+      .get('/api/v1/career-twin/timeline')
+      .set('Authorization', `Bearer ${bob.token}`);
+    expect(bobTl.status).toBe(200);
+    expect(bobTl.body.data.events.filter((e) => e.type !== 'twin_created')).toHaveLength(0);
+  });
+
+  test('career-match: insufficient evidence / no target role / success via orchestrator', async () => {
+    const alice = await registerUser('tl-e@example.com');
+
+    // No twin content yet -> INSUFFICIENT_EVIDENCE
+    const empty = await request(app)
+      .post('/api/v1/career-twin/career-match')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({});
+    expect(empty.status).toBe(400);
+    expect(empty.body.error.code).toBe('INSUFFICIENT_EVIDENCE');
+
+    // Twin with skills but no target role -> NO_TARGET_ROLE
+    await request(app).get('/api/v1/career-twin').set('Authorization', `Bearer ${alice.token}`);
+    await request(app)
+      .put('/api/v1/career-twin')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({ skills: TWIN_PATCH.skills });
+    const noRole = await request(app)
+      .post('/api/v1/career-twin/career-match')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({});
+    expect(noRole.status).toBe(400);
+    expect(noRole.body.error.code).toBe('NO_TARGET_ROLE');
+
+    // With a target role and a mocked orchestrator -> explainable match
+    const mockHandle = jest.spyOn(orchestrator, 'handle').mockResolvedValue({
+      success: true,
+      content: {
+        target_career: 'Software Engineer',
+        known_target: true,
+        overall_alignment: 64.2,
+        confidence: 'medium',
+        dimensions: [{ name: 'skillMatch', score: 55.6, reason: 'test' }],
+        strong_areas: ['python'],
+        risk_areas: [],
+        missing_requirements: ['javascript'],
+        recommended_actions: ['Close the highest-priority gap: javascript.'],
+        disclaimer: 'Estimated alignment. Not an employment prediction.',
+      },
+      structuredData: { overall_alignment: 64.2 },
+    });
+
+    const ok = await request(app)
+      .post('/api/v1/career-twin/career-match')
+      .set('Authorization', `Bearer ${alice.token}`)
+      .send({ targetRole: 'Software Engineer' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.overall_alignment).toBe(64.2);
+    expect(ok.body.data.twinVersion).toBeGreaterThan(1);
+    expect(ok.body.data).not.toHaveProperty('provider');
+    expect(ok.body.data).not.toHaveProperty('latency');
+    mockHandle.mockRestore();
+  });
+});
+
 describe('next-best-action (REAL MONGODB)', () => {
   test('returns onboarding primary action when no twin exists', async () => {
     const alice = await registerUser('nba-a@example.com');
