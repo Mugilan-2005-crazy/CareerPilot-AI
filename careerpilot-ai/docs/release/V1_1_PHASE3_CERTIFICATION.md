@@ -1,11 +1,9 @@
 # CareerPilot AI — v1.1 Phase 3 Release Certification (2026-09-19)
 
 **Branch:** `main`
-**Certified commit:** `2f6a59850c964a16f300e0a6456b293b5086d398` (tip; docs-only addition on top of code commit `f17e480d862f83356d37381d2c40da3a3312b5c0`)
+**Code commit (all implementation):** `f17e480d862f83356d37381d2c40da3a3312b5c0` — CI run `35421203262` success 6/6
 **Baseline preserved:** `ea304418e5ed5d08ba5782a75d4803717de56d3c` (v1.0.0 guarantees intact, additive only)
-**CI run:** `35421405122` — `success`, 6/6 jobs green on exact head SHA `2f6a598`
-**CI URL:** https://github.com/Mugilan-2005-crazy/CareerPilot-AI/actions/runs/35421405122
-**Code-commit CI:** run `35421203262` — `success`, 6/6 green on `f17e480` (code identical; tip adds only this doc)
+**Tip certification:** this doc lives at the repo tip; the tip's own CI run must show `success` 6/6 on the tip SHA (verified post-push via GitHub API; run link recorded in the final report). Commits after `f17e480` are docs-only.
 
 ## Verified results (executed, not assumed)
 
