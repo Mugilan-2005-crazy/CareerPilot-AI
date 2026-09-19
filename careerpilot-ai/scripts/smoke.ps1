@@ -1,6 +1,12 @@
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 $base = 'http://localhost:5020'
 $client = 'http://localhost:8090'
+# Unique identities per run so the script is re-runnable against a stack whose
+# MongoDB volume already holds earlier smoke users.
+$stamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+$email1 = "smoke-$stamp@example.com"
+$email2 = "smoke2-$stamp@example.com"
 function Status($label, $method, $url, $body = $null, $auth = $null) {
   try {
     $headers = @{}
@@ -21,16 +27,16 @@ function Status($label, $method, $url, $body = $null, $auth = $null) {
 Status 'server /health' 'Get' "$base/health"
 
 # 2 register
-$reg = Invoke-RestMethod -Uri "$base/api/v1/auth/register" -Method Post -ContentType 'application/json' -Body (@{name='Smoke User';email='smoke@example.com';password='password123'} | ConvertTo-Json)
+$reg = Invoke-RestMethod -Uri "$base/api/v1/auth/register" -Method Post -ContentType 'application/json' -Body (@{name='Smoke User';email=$email1;password='password123'} | ConvertTo-Json)
 Write-Output ("register success=" + $reg.success + " hasToken=" + [bool]$reg.token)
 $t1 = $reg.token; $rt1 = $reg.refreshToken
 
 # 3 login
-$log = Invoke-RestMethod -Uri "$base/api/v1/auth/login" -Method Post -ContentType 'application/json' -Body (@{email='smoke@example.com';password='password123'} | ConvertTo-Json)
+$log = Invoke-RestMethod -Uri "$base/api/v1/auth/login" -Method Post -ContentType 'application/json' -Body (@{email=$email1;password='password123'} | ConvertTo-Json)
 Write-Output ("login success=" + $log.success)
 
 # second user for ownership
-$u2 = Invoke-RestMethod -Uri "$base/api/v1/auth/register" -Method Post -ContentType 'application/json' -Body (@{name='Smoke Two';email='smoke2@example.com';password='password123'} | ConvertTo-Json)
+$u2 = Invoke-RestMethod -Uri "$base/api/v1/auth/register" -Method Post -ContentType 'application/json' -Body (@{name='Smoke Two';email=$email2;password='password123'} | ConvertTo-Json)
 
 # 4 refresh + replay
 $ref = Invoke-RestMethod -Uri "$base/api/v1/auth/refresh" -Method Post -ContentType 'application/json' -Body (@{refreshToken=$rt1} | ConvertTo-Json)

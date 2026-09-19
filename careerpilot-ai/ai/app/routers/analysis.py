@@ -16,6 +16,12 @@ from app.schemas.career_intelligence import (
     SkillGapAdvancedRequest,
     RoadmapRequest,
     ProjectRecommendationRequest,
+    ResumeIntelligenceRequest,
+    JDIntelligenceRequest,
+    CareerPathExplorerRequest,
+    CareerPathDetailsRequest,
+    WhatIfSimulationRequest,
+    InterviewIntelligenceRequest,
 )
 from app.schemas.analysis import (
     ChatRequest,
@@ -37,6 +43,14 @@ from app.services.career_intelligence import (
     analyze_skill_gap_advanced,
     generate_roadmap,
     recommend_projects,
+)
+from app.services.resume_intelligence import analyze_resume_intelligence
+from app.services.jd_intelligence import analyze_jd_intelligence
+from app.services.career_path_explorer import explore_career_paths, get_path_details
+from app.services.what_if_simulation import run_what_if_simulation
+from app.services.interview_intelligence import (
+    analyze_interview_intelligence,
+    generate_interview_questions_intelligent,
 )
 
 router = APIRouter()
@@ -61,6 +75,11 @@ def resume_analysis(payload: ResumeAnalysisRequest):
     return _guard(analyze_resume_ats, payload)
 
 
+@router.post("/resume-intelligence")
+def resume_intelligence(payload: ResumeIntelligenceRequest):
+    return _guard(analyze_resume_intelligence, payload.model_dump())
+
+
 @router.post("/skill-gap")
 def skill_gap_analysis(payload: SkillGapRequest):
     return _guard(analyze_skill_gaps, payload)
@@ -79,6 +98,11 @@ def company_recommendation(payload: CompanyRecommendationRequest):
 @router.post("/interview-questions")
 def interview_questions(payload: InterviewQuestionRequest):
     return _guard(generate_interview_questions, payload)
+
+
+@router.post("/interview-questions-intelligent")
+def interview_questions_intelligent(payload: InterviewIntelligenceRequest):
+    return _guard(generate_interview_questions_intelligent, payload.model_dump())
 
 
 @router.post("/chat")
@@ -121,6 +145,31 @@ def jd_analysis(payload: JDAnalysisRequest):
     return _guard(analyze_job_description, payload.model_dump())
 
 
+@router.post("/jd-intelligence")
+def jd_intelligence(payload: JDIntelligenceRequest):
+    return _guard(analyze_jd_intelligence, payload.model_dump())
+
+
 @router.post("/career-transition")
 def career_transition(payload: CareerTransitionRequest):
     return _guard(analyze_career_transition, payload.model_dump())
+
+
+@router.post("/career-path-explorer")
+def career_path_explorer(payload: CareerPathExplorerRequest):
+    return _guard(explore_career_paths, payload.model_dump())
+
+
+@router.post("/career-path-details")
+def career_path_details(payload: CareerPathDetailsRequest):
+    return _guard(get_path_details, payload.model_dump())
+
+
+@router.post("/what-if-simulation")
+def what_if_simulation(payload: WhatIfSimulationRequest):
+    return _guard(run_what_if_simulation, payload.model_dump())
+
+
+@router.post("/interview-intelligence")
+def interview_intelligence(payload: InterviewIntelligenceRequest):
+    return _guard(analyze_interview_intelligence, payload.model_dump())

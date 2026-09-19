@@ -38,6 +38,13 @@ const analyzeSkillGapAdvanced = (req, res, next) => _handleTask(req, res, next, 
 const matchCareerV2 = (req, res, next) => _handleTask(req, res, next, 'career-match-v2');
 const generateRoadmap = (req, res, next) => _handleTask(req, res, next, 'roadmap');
 const recommendProjects = (req, res, next) => _handleTask(req, res, next, 'project-recommendations');
+const analyzeResumeIntelligence = (req, res, next) => _handleTask(req, res, next, 'resume-intelligence');
+const analyzeJdIntelligence = (req, res, next) => _handleTask(req, res, next, 'jd-intelligence');
+const exploreCareerPaths = (req, res, next) => _handleTask(req, res, next, 'career-path-explorer');
+const getPathDetails = (req, res, next) => _handleTask(req, res, next, 'career-path-details');
+const runWhatIfSimulation = (req, res, next) => _handleTask(req, res, next, 'what-if-simulation');
+const analyzeInterviewIntelligence = (req, res, next) => _handleTask(req, res, next, 'interview-intelligence');
+const generateInterviewQuestionsIntelligent = (req, res, next) => _handleTask(req, res, next, 'interview-questions-intelligent');
 
 module.exports = {
   matchCareers,
@@ -46,5 +53,12 @@ module.exports = {
   matchCareerV2,
   generateRoadmap,
   recommendProjects,
+  analyzeResumeIntelligence,
+  analyzeJdIntelligence,
+  exploreCareerPaths,
+  getPathDetails,
+  runWhatIfSimulation,
+  analyzeInterviewIntelligence,
+  generateInterviewQuestionsIntelligent,
   sanitizeOutput,
 };

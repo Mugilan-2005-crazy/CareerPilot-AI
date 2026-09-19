@@ -22,6 +22,15 @@ async function request(task, payload, requestId) {
     'jd-analysis': '/api/ai/jd-analysis',
     'career-transition': '/api/ai/career-transition',
     'ai-chat': '/api/ai/chat',
+    // v1.1 career intelligence extensions (must stay in sync with
+    // server/routes/aiCareerRoutes.js and the AI service routers).
+    'resume-intelligence': '/api/ai/resume-intelligence',
+    'jd-intelligence': '/api/ai/jd-intelligence',
+    'career-path-explorer': '/api/ai/career-path-explorer',
+    'career-path-details': '/api/ai/career-path-details',
+    'what-if-simulation': '/api/ai/what-if-simulation',
+    'interview-intelligence': '/api/ai/interview-intelligence',
+    'interview-questions-intelligent': '/api/ai/interview-questions-intelligent',
   };
 
   const path = endpointMap[task];

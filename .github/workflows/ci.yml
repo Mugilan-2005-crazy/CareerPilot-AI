@@ -116,10 +116,26 @@ jobs:
           cache-dependency-path: careerpilot-ai/ai/requirements*.txt
       - name: Install
         run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Dependency health (pip check)
+        run: python -m pip check
       - name: Import + startup check
         run: python -c "import main; from fastapi.testclient import TestClient; c=TestClient(main.app); assert c.get('/health').status_code == 200"
       - name: Test suite
         run: python -m pytest -q
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: careerpilot-ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Scan repository sources for committed secrets
+        run: node scripts/scan-secrets.js
 
   e2e:
     name: Frontend E2E (Playwright)

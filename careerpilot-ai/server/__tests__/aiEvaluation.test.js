@@ -47,6 +47,15 @@ describe('AI Evaluation Framework', () => {
     { path: '/api/v1/ai/company-recommendation', task: 'company-recommendation', payload: { skills: ['python', 'sql'], target_role: 'Software Engineer' } },
     { path: '/api/v1/ai/interview-questions', task: 'interview-questions', payload: { role: 'Software Engineer', difficulty: 'medium' } },
     { path: '/api/v1/ai/ai-chat', task: 'ai-chat', payload: { message: 'Hello, I need career advice.' } },
+    { path: '/api/ai-career/career-match-v2', task: 'career-match-v2', payload: { target_career: 'Data Scientist', current_skills: ['python'], skill_evidence: [{ skill: 'python', proficiency: 'advanced', evidence_count: 2 }] } },
+    { path: '/api/ai-career/skill-gap-advanced', task: 'skill-gap-advanced', payload: { target_career: 'Data Scientist', current_skills: ['python'] } },
+    { path: '/api/ai-career/resume-intelligence', task: 'resume-intelligence', payload: { resume_text: 'Experienced Python developer with JavaScript and SQL skills.', target_role: 'Software Engineer' } },
+    { path: '/api/ai-career/jd-intelligence', task: 'jd-intelligence', payload: { job_description: 'Python developer with SQL and cloud experience.', user_skills: ['python', 'sql'] } },
+    { path: '/api/ai-career/career-path-explorer', task: 'career-path-explorer', payload: { current_skills: ['python', 'sql'], experience_years: 1 } },
+    { path: '/api/ai-career/career-path-details', task: 'career-path-details', payload: { path_id: 'backend', current_skills: ['python'] } },
+    { path: '/api/ai-career/what-if-simulation', task: 'what-if-simulation', payload: { target_career: 'Data Scientist', current_skills: ['python'], simulated_improvements: [{ type: 'skill_improvement', skill: 'machine learning', new_proficiency: 'advanced' }] } },
+    { path: '/api/ai-career/interview-intelligence', task: 'interview-intelligence', payload: { target_role: 'Software Engineer', current_skills: ['python'], interview_type: 'technical' } },
+    { path: '/api/ai-career/interview-questions-intelligent', task: 'interview-questions-intelligent', payload: { target_role: 'Software Engineer', current_skills: ['python'], interview_type: 'technical' } },
   ];
 
   test.each(endpoints)('$path returns valid structured response', async ({ path, task, payload }) => {

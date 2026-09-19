@@ -9,6 +9,9 @@ from app.services.skill_graph import (
     analyze_skill_coverage,
 )
 
+# Module-level constants for use by other services
+LEVEL_SCORE = {"none": 0, "unknown": 0, "beginner": 1, "intermediate": 2, "advanced": 3, "expert": 4}
+
 CAREERS = [
     {
         "id": "software-engineer",

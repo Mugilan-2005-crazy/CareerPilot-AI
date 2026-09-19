@@ -48,7 +48,20 @@ const PLACEHOLDERS = new Set([
   'replaced-token',
 ]);
 
-const SKIP = new Set(['node_modules', '.git', 'dist', 'build', '__pycache__', '.venv', '.pytest_cache']);
+const SKIP = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  '__pycache__',
+  '.venv',
+  '.pytest_cache',
+  '.vite',
+  'coverage',
+  'test-results',
+  'playwright-report',
+  'tmpwheel',
+]);
 const SKIP_FILE = /(package-lock\.json|\.pyc$|\.tsbuildinfo$|\.map$)/;
 
 function walk(dir, out) {

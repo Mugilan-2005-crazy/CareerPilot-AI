@@ -158,9 +158,17 @@ describe('v1 AI security evidence', () => {
   });
 
   test('global rate limiting applies before the v1 AI handler', async () => {
-    const responses = await Promise.all(
-      Array.from({ length: 210 }, () => request(app).post('/api/v1/ai/skill-gap').send({})),
-    );
+    // Bounded waves: supertest opens one ephemeral server/socket per request,
+    // so 210 simultaneous requests can abort the Node process (Windows
+    // STATUS_STACK_BUFFER_OVERRUN) instead of failing an assertion.
+    const WAVE_SIZE = 25;
+    const responses = [];
+    for (let sent = 0; sent < 210; sent += WAVE_SIZE) {
+      const wave = Array.from({ length: Math.min(WAVE_SIZE, 210 - sent) }, () =>
+        request(app).post('/api/v1/ai/skill-gap').send({}),
+      );
+      responses.push(...(await Promise.all(wave)));
+    }
 
     expect(responses.some((response) => response.status === 429)).toBe(true);
     expect(responses.every((response) => [401, 429].includes(response.status))).toBe(true);

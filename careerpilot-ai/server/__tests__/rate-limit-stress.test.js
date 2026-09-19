@@ -17,6 +17,20 @@ describe('rate-limit stress evidence (DETERMINISTIC, BOUNDED)', () => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // supertest opens an ephemeral HTTP server + socket per request. Firing
+  // hundreds of requests simultaneously can exhaust Windows ephemeral
+  // ports/handles and abort the Node process mid-run, so bursts are sent in
+  // bounded waves. Request totals, status codes and assertions are unchanged.
+  const WAVE_SIZE = 25;
+  async function fire(makeRequest, total) {
+    const responses = [];
+    for (let sent = 0; sent < total; sent += WAVE_SIZE) {
+      const wave = Array.from({ length: Math.min(WAVE_SIZE, total - sent) }, makeRequest);
+      responses.push(...(await Promise.all(wave)));
+    }
+    return responses;
+  }
+
   test('global limiter: requests below threshold are accepted', async () => {
     const responses = await Promise.all(
       Array.from({ length: 5 }, () => request(app).get('/health')),
@@ -25,9 +39,7 @@ describe('rate-limit stress evidence (DETERMINISTIC, BOUNDED)', () => {
   });
 
   test('global limiter: requests beyond threshold are rejected with 429', async () => {
-    const responses = await Promise.all(
-      Array.from({ length: GLOBAL_LIMIT + 10 }, () => request(app).get('/health')),
-    );
+    const responses = await fire(() => request(app).get('/health'), GLOBAL_LIMIT + 10);
 
     const accepted = responses.filter((r) => r.status === 200);
     const rejected = responses.filter((r) => r.status === 429);
@@ -38,9 +50,7 @@ describe('rate-limit stress evidence (DETERMINISTIC, BOUNDED)', () => {
   });
 
   test('rejected response is sanitized and contains no sensitive data', async () => {
-    const responses = await Promise.all(
-      Array.from({ length: GLOBAL_LIMIT + 20 }, () => request(app).get('/health')),
-    );
+    const responses = await fire(() => request(app).get('/health'), GLOBAL_LIMIT + 20);
 
     const rejected = responses.find((r) => r.status === 429);
     expect(rejected).toBeDefined();
@@ -49,10 +59,9 @@ describe('rate-limit stress evidence (DETERMINISTIC, BOUNDED)', () => {
   });
 
   test('auth limiter: 20 unauthenticated /auth requests are accepted, 21st is rejected', async () => {
-    const responses = await Promise.all(
-      Array.from({ length: AUTH_LIMIT + 2 }, () =>
-        request(app).post('/api/v1/auth/register').send({ name: 'X', email: 'x@example.com', password: 'password123' }),
-      ),
+    const responses = await fire(
+      () => request(app).post('/api/v1/auth/register').send({ name: 'X', email: 'x@example.com', password: 'password123' }),
+      AUTH_LIMIT + 2,
     );
 
     const accepted = responses.filter((r) => [201, 400, 409].includes(r.status));
@@ -64,13 +73,13 @@ describe('rate-limit stress evidence (DETERMINISTIC, BOUNDED)', () => {
 
   test('AI limiter: authenticated requests beyond 40 are rejected with 429', async () => {
     const authHeader = `Bearer ${token()}`;
-    const responses = await Promise.all(
-      Array.from({ length: AI_LIMIT + 5 }, () =>
+    const responses = await fire(
+      () =>
         request(app)
           .post('/api/v1/ai/skill-gap')
           .set('Authorization', authHeader)
           .send({ skills: ['javascript'] }),
-      ),
+      AI_LIMIT + 5,
     );
 
     const accepted = responses.filter((r) => [200, 400, 401, 502].includes(r.status));

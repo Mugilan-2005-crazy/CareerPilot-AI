@@ -90,6 +90,25 @@ from effort-vs-impact); ranking is priority-first, ROI-tiebroken. Missing
 inputs yield `Insufficient evidence`-style guidance (e.g. "Build your
 Career Twin"), never invented advice.
 
+## Resume / JD / Path / What-If / Interview Intelligence (Phase 3 — IMPLEMENTED)
+
+Deterministic heuristic services (no LLM required), each exposed on the AI
+service (`/api/ai/*`), the Node gateway (`/api/v1/ai-career/*`,
+Zod-strict + auth + AI limiter), and the deterministic provider map:
+
+- `ai/app/services/resume_intelligence.py :: analyze_resume_intelligence` —
+  skill extraction, experience/project signals, ATS-style checks,
+  `INSUFFICIENT_EVIDENCE` empty states.
+- `ai/app/services/jd_intelligence.py :: analyze_jd_intelligence` —
+  requirement extraction, matched/missing skills, fit score labelled estimate.
+- `ai/app/services/career_path_explorer.py` — multi-path exploration
+  (`explore_career_paths`, `get_path_details`) reusing `match_career_v2`.
+- `ai/app/services/what_if_simulation.py :: run_what_if_simulation` —
+  before/after alignment delta for simulated improvements.
+- `ai/app/services/interview_intelligence.py` — readiness assessment +
+  deterministic question generation; untrusted role text is echoed as data
+  and never executed as instruction (verified by probe).
+
 ## Frontend (Phase 2 — IMPLEMENTED)
 
 `DashboardPage.tsx` renders the intelligence loop surface: a Next-Best-Action
