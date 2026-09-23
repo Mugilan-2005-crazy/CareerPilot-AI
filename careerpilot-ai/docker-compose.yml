@@ -55,6 +55,15 @@ services:
     depends_on:
       server:
         condition: service_healthy
+    healthcheck:
+      # nginx:alpine ships busybox wget. Checking `/` proves the container is
+      # actually serving the built SPA (not just that the process exists).
+      # 127.0.0.1 is explicit: busybox wget resolves `localhost` to IPv6 first
+      # and nginx here binds IPv4 only.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   mongo-data:
